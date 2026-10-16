@@ -15,10 +15,7 @@ projects.forEach((p,i)=>{
  const n=String(i+1).padStart(2,"0"),btn=document.createElement("button");
  btn.type="button";btn.className="folder-card";btn.style.setProperty("--c",p[3]);btn.style.setProperty("--i",i);btn.style.setProperty("--tilt",[-5,2,-3,4,-2,6][i]+"deg");
  btn.innerHTML='<span class="folder-num">'+n+' / 06</span><strong class="folder-label">'+p[0]+'</strong><span class="folder-foot">ABRIR FICHA ↗</span>';
- btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>openProject(i));$("#fileStack").append(btn);
- const li=document.createElement("li");li.className="index-item";const link=document.createElement("button");link.type="button";
- link.innerHTML='<span class="index-number">'+n+'</span><span class="index-title">'+p[0]+'</span><span class="index-tag">'+p[1]+'</span><span class="index-arrow">↗</span>';
- link.addEventListener("click",()=>openProject(i));li.append(link);$("#projectIndex").append(li);
+ btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>pickFolder(i));$("#fileStack").append(btn);
 });
 function setDrawer(value){
  drawerOpen=value;$("#cabinet").classList.toggle("is-open",value);$("#drawerToggle").textContent=value?"↑ CERRAR CAJÓN":"↓ ABRIR CAJÓN";
@@ -27,6 +24,7 @@ function setDrawer(value){
 function closeProject(restore=true){
  const overlay=$("#projectOverlay");if(!overlay.classList.contains("is-visible"))return;
  overlay.classList.remove("is-visible");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";
+ $(".folder-card").forEach(card=>card.classList.remove("is-picking"));
  if(restore&&previousFocus)previousFocus.focus();
 }
 function setView(view,animate=true){
@@ -44,6 +42,12 @@ function setView(view,animate=true){
  }else change();
 }
 function route(view){history.pushState({view:view},"","#"+(view==="home"?"inicio":view==="archive"?"archivo":"sobre-mi"));setView(view);}
+function pickFolder(i){
+ if(!drawerOpen)setDrawer(true);
+ $(".folder-card").forEach(card=>card.classList.remove("is-picking"));
+ const card=$(".folder-card")[i];if(card)card.classList.add("is-picking");
+ setTimeout(()=>openProject(i),reduced.matches?0:460);
+}
 function openProject(i){
  const p=projects[i];if(!p)return;
  currentProject=i;previousFocus=document.activeElement;
