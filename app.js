@@ -15,7 +15,7 @@ projects.forEach((p,i)=>{
  const n=String(i+1).padStart(2,"0"),btn=document.createElement("button");
  btn.type="button";btn.className="folder-card";btn.style.setProperty("--c",p[3]);btn.style.setProperty("--i",i);btn.style.setProperty("--tilt",[-5,2,-3,4,-2,6][i]+"deg");
  btn.innerHTML='<span class="folder-head"><span class="folder-num">FICHERO / '+n+'</span><span class="folder-category">'+p[1]+'</span><span class="folder-action">↗</span></span><strong class="folder-label">'+p[0]+'</strong><span class="folder-foot">CARPETA '+n+' — PULSAR PARA EXAMINAR</span>';
- btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>pickFolder(i));$("#fileStack").append(btn);
+ btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>pickFolder(i));btn.addEventListener("mouseenter",()=>fanCards(i));btn.addEventListener("focus",()=>fanCards(i));$("#fileStack").append(btn);
 });
 function setDrawer(value){
  drawerOpen=value;$("#cabinet").classList.toggle("is-open",value);$("#drawerToggle").textContent=value?"↑ CERRAR CAJÓN":"↓ ABRIR CAJÓN";
@@ -24,7 +24,7 @@ function setDrawer(value){
 function closeProject(restore=true){
  const overlay=$("#projectOverlay");if(!overlay.classList.contains("is-visible"))return;
  overlay.classList.remove("is-visible");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";
- $$(".folder-card").forEach(card=>card.classList.remove("is-picking"));
+ $(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
  if(restore&&previousFocus)previousFocus.focus();
 }
 function setView(view,animate=true){
@@ -42,11 +42,18 @@ function setView(view,animate=true){
  }else change();
 }
 function route(view){history.pushState({view:view},"","#"+(view==="home"?"inicio":view==="archive"?"archivo":"sobre-mi"));setView(view);}
+function fanCards(index){
+ if(!drawerOpen||picking||!matchMedia("(pointer:fine)").matches)return;
+ $$(".folder-card").forEach((card,i)=>card.classList.toggle("is-shifted",i>index));
+}
+function clearFan(){if(!picking)$$(".folder-card").forEach(card=>card.classList.remove("is-shifted"));}
+$("#fileStack").addEventListener("mouseleave",clearFan);
+$("#fileStack").addEventListener("focusout",e=>{if(!e.currentTarget.contains(e.relatedTarget))clearFan();});
 let picking=false;
 function pickFolder(i){
  if(picking || !drawerOpen)return;
  picking=true;
- $$(".folder-card").forEach(card=>card.classList.remove("is-picking"));
+ $(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
  const card=$$(".folder-card")[i];if(card)card.classList.add("is-picking");
  setTimeout(()=>{openProject(i);picking=false},reduced.matches?0:570);
 }
