@@ -540,3 +540,23 @@ body.is-lens-on,body.is-lens-on button,body.is-lens-on a{cursor:none}
 @media(prefers-reduced-motion:reduce){
   .cabinet.is-open .folder-card.is-shifted{transform:none}
 }
+
+/* Explicit stepped positions, widely supported without CSS multiplication. */
+.folder-stack .folder-card:nth-child(1){top:8%;z-index:2;transition-delay:0ms}
+.folder-stack .folder-card:nth-child(2){top:18.3%;z-index:3;transition-delay:76ms}
+.folder-stack .folder-card:nth-child(3){top:28.6%;z-index:4;transition-delay:152ms}
+.folder-stack .folder-card:nth-child(4){top:38.9%;z-index:5;transition-delay:228ms}
+.folder-stack .folder-card:nth-child(5){top:49.2%;z-index:6;transition-delay:304ms}
+.folder-stack .folder-card:nth-child(6){top:59.5%;z-index:7;transition-delay:380ms}
+.cabinet.is-open .folder-card:hover,
+.cabinet.is-open .folder-card:focus-visible,
+.cabinet.is-open .folder-card.is-picking,
+.cabinet.is-open .folder-card.is-shifted{transition-delay:0s}
+@media(max-width:600px){
+ .folder-stack .folder-card:nth-child(1){top:6%}
+ .folder-stack .folder-card:nth-child(2){top:17%}
+ .folder-stack .folder-card:nth-child(3){top:28%}
+ .folder-stack .folder-card:nth-child(4){top:39%}
+ .folder-stack .folder-card:nth-child(5){top:50%}
+ .folder-stack .folder-card:nth-child(6){top:61%}
+}
