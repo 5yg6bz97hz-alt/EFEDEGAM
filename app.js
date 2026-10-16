@@ -14,7 +14,7 @@ const views={home:$("#homeView"),archive:$("#archiveView"),about:$("#aboutView")
 projects.forEach((p,i)=>{
  const n=String(i+1).padStart(2,"0"),btn=document.createElement("button");
  btn.type="button";btn.className="folder-card";btn.style.setProperty("--c",p[3]);btn.style.setProperty("--i",i);btn.style.setProperty("--tilt",[-5,2,-3,4,-2,6][i]+"deg");
- btn.innerHTML='<span class="folder-num">'+n+' / 06</span><strong class="folder-label">'+p[0]+'</strong><span class="folder-foot">ABRIR FICHA ↗</span>';
+ btn.innerHTML='<span class="folder-head"><span class="folder-num">FICHERO / '+n+'</span><span class="folder-category">'+p[1]+'</span><span class="folder-action">↗</span></span><strong class="folder-label">'+p[0]+'</strong><span class="folder-foot">CARPETA '+n+' — PULSAR PARA EXAMINAR</span>';
  btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>pickFolder(i));$("#fileStack").append(btn);
 });
 function setDrawer(value){
@@ -24,7 +24,7 @@ function setDrawer(value){
 function closeProject(restore=true){
  const overlay=$("#projectOverlay");if(!overlay.classList.contains("is-visible"))return;
  overlay.classList.remove("is-visible");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";
- $(".folder-card").forEach(card=>card.classList.remove("is-picking"));
+ $$(".folder-card").forEach(card=>card.classList.remove("is-picking"));
  if(restore&&previousFocus)previousFocus.focus();
 }
 function setView(view,animate=true){
@@ -34,7 +34,7 @@ function setView(view,animate=true){
  const change=()=>{
  Object.keys(views).forEach(key=>{views[key].hidden=key!==view;views[key].classList.toggle("is-active",key===view);});
  currentView=view;$$(".nav-btn").forEach(btn=>btn.classList.toggle("is-current",btn.dataset.nav===view));window.scrollTo(0,0);
- if(view==="archive")setTimeout(()=>setDrawer(true),reduced.matches?0:200);
+ if(view==="archive")setTimeout(()=>setDrawer(true),reduced.matches?0:420);
  };
  if(animate&&!reduced.matches){
  transitioning=true;const wipe=$("#siteWipe");wipe.classList.remove("is-leaving");wipe.classList.add("is-cover");
@@ -42,11 +42,13 @@ function setView(view,animate=true){
  }else change();
 }
 function route(view){history.pushState({view:view},"","#"+(view==="home"?"inicio":view==="archive"?"archivo":"sobre-mi"));setView(view);}
+let picking=false;
 function pickFolder(i){
- if(!drawerOpen)setDrawer(true);
- $(".folder-card").forEach(card=>card.classList.remove("is-picking"));
- const card=$(".folder-card")[i];if(card)card.classList.add("is-picking");
- setTimeout(()=>openProject(i),reduced.matches?0:460);
+ if(picking || !drawerOpen)return;
+ picking=true;
+ $$(".folder-card").forEach(card=>card.classList.remove("is-picking"));
+ const card=$$(".folder-card")[i];if(card)card.classList.add("is-picking");
+ setTimeout(()=>{openProject(i);picking=false},reduced.matches?0:570);
 }
 function openProject(i){
  const p=projects[i];if(!p)return;
