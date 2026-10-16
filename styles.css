@@ -515,3 +515,28 @@ body.is-lens-on,body.is-lens-on button,body.is-lens-on a{cursor:none}
   .folder-card .folder-category{font-size:7px}
   .drawer-stamp{display:none}
 }
+
+
+/* Handling the cards like a real paper index: those in front slide away
+   when the pointer rests on a card further back. */
+.folder-card:first-child:before{left:4%}
+.cabinet.is-open .folder-card.is-shifted{
+  transform:translateY(24%) rotateX(-11deg) rotate(-.6deg);
+  filter:brightness(.98);
+  transition-delay:0s;
+}
+.cabinet.is-open .folder-card.is-shifted:hover,
+.cabinet.is-open .folder-card.is-shifted:focus-visible{
+  transform:translateY(-10%) rotateX(-2deg) scale(1.012);
+}
+@media(max-width:600px){
+  .folder-card:nth-child(2):before{left:22%}
+  .folder-card:nth-child(3):before{left:45%}
+  .folder-card:nth-child(4):before{left:12%}
+  .folder-card:nth-child(5):before{left:57%}
+  .folder-card:nth-child(6):before{left:35%}
+  .cabinet.is-open .folder-card.is-shifted{transform:translateY(14%) rotateX(-7deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .cabinet.is-open .folder-card.is-shifted{transform:none}
+}
