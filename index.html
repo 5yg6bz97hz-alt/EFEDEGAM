@@ -1,28 +1,131 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mi portfolio</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #eeeae2;
-      color: #252525;
-      font-family: Georgia, serif;
-      text-align: center;
-    }
-    h1 { font-size: clamp(40px, 8vw, 100px); margin: 0; }
-    p { font-family: Arial, sans-serif; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f2eee6">
+  <meta name="description" content="Un portfolio personal que funciona como un archivador de ideas: arquitectura, dibujos, fotomontajes y experimentos.">
+  <title>Mi archivo personal — Portfolio</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
 </head>
 <body>
-  <main>
-    <h1>Mi archivo personal</h1>
-    <p>Arquitectura · Dibujos · Fotomontajes</p>
-  </main>
+  <div id="siteFrame">
+    <div class="topline mono"><span>OBJETOS, IDEAS, PROYECTOS Y OTRAS COSAS.</span><span>ARCHIVO PERSONAL / EN CONSTRUCCIÓN ✳</span></div>
+    <header class="site-header">
+      <a class="brand" href="#inicio" data-nav="home" aria-label="Ir al inicio">
+        <span class="brand-emblem" aria-hidden="true">✳</span>
+        <span class="brand-name">MI ARCHIVO<small>PORTFOLIO PERSONAL</small></span>
+      </a>
+      <nav class="nav" aria-label="Navegación principal">
+        <button class="nav-btn is-current" data-nav="home" type="button">INICIO</button>
+        <button class="nav-btn" data-nav="archive" type="button">ARCHIVO ↗</button>
+        <button class="nav-btn" data-nav="about" type="button">SOBRE MÍ</button>
+      </nav>
+      <button class="lens-switch mono" id="lensSwitch" type="button" aria-pressed="false" title="Activar o desactivar lupa (solo ordenador)">
+        <span class="lens-switch-icon" aria-hidden="true"></span><span id="lensSwitchText">LUPA: OFF</span>
+      </button>
+    </header>
+    <main id="main">
+      <section class="view view-home is-active" id="homeView" aria-labelledby="heroHeading">
+        <div class="home-layout">
+          <div class="home-copy">
+            <div class="eyebrow mono"><span class="red-dot"></span><span>VOL. 01 &nbsp;—&nbsp; PORTFOLIO PERSONAL</span></div>
+            <h1 class="hero-title" id="heroHeading">TODO LO<br>QUE NO<br><em>CABE</em> EN<br>UN PLANO<span class="hero-star" aria-hidden="true">✳</span></h1>
+            <p class="home-intro">Una colección (un poco desordenada) de <strong>arquitectura, dibujos, fotomontajes, objetos</strong> y cosas que me apetecía hacer.</p>
+            <div class="actions">
+              <button class="primary-btn" type="button" data-nav="archive">ABRIR EL ARCHIVADOR <span aria-hidden="true">↗</span></button>
+              <button class="text-btn" type="button" data-nav="about">¿QUÉ ES ESTO?</button>
+            </div>
+            <div class="home-footnote mono"><span>HECHO PARA CURIOSOS / NO TOCAR CON GUANTES</span><span>01 — 03</span></div>
+          </div>
+          <div class="hero-graphic" aria-label="Ilustración de carpetas y documentos de colores">
+            <div class="hero-circle" aria-hidden="true"></div>
+            <div class="hero-paper" aria-hidden="true">
+              <div class="paper-heading">ideas,<br>planos,<br>cosas.</div><div class="paper-numbers">ARCH. / 001—006<br>NO CLASIFICADO</div>
+            </div>
+            <div class="hero-blue-file" aria-hidden="true">
+              <strong>Una<br>cosa<br>lleva a<br>otra.</strong>
+              <span class="line"></span><span class="tiny">ESTO ES UN ARCHIVO ABIERTO ↗</span>
+            </div>
+            <div class="hero-note" aria-hidden="true">«Cuidado: aquí hay de todo»</div>
+            <div class="hero-sticker" aria-hidden="true"><b>01</b><span class="mono">EDICIÓN<br>PERSONAL</span></div>
+          </div>
+        </div>
+      </section>
+      <section class="view view-archive" id="archiveView" aria-labelledby="archiveHeading" hidden>
+        <div class="archive-wrap">
+          <div class="archive-heading">
+            <div><div class="mono">SALÓN DE CONSULTA / SECCIÓN 01</div><h2 id="archiveHeading">El archivador<span aria-hidden="true">.</span></h2></div>
+            <p>ABRE EL CAJÓN.<br>ESCOGE UNA CARPETA.<br>CURIOSEA A TU RITMO. ↙</p>
+          </div>
+          <div class="archive-layout">
+            <div class="cabinet-zone">
+              <div class="cabinet" id="cabinet">
+                <div class="cabinet-case">
+                  <div class="cabinet-cavity"><div class="folder-stack" id="fileStack" aria-label="Carpetas de proyectos"></div></div>
+                </div>
+                <div class="cabinet-top"><span>✳</span>ARCHIVO DE COSAS QUE HAGO<span>001—006</span></div>
+                <div class="drawer-front" aria-hidden="true"><div class="drawer-handle"></div><div class="drawer-plaque">PROYECTOS / CAJÓN 01</div></div>
+                <button class="drawer-toggle" id="drawerToggle" type="button" aria-expanded="false" aria-controls="fileStack">↓ ABRIR CAJÓN</button>
+              </div>
+            </div>
+            <aside class="index-panel" aria-label="Índice de proyectos">
+              <div class="index-head"><h3>Índice de<br>carpetas</h3><span class="mono">N.º 001</span></div>
+              <p class="index-description">Cada carpeta guarda un proyecto. Estas seis fichas son <strong>ejemplos provisionales</strong> hasta que incorporemos tus trabajos.</p>
+              <ol class="project-index" id="projectIndex"></ol>
+            </aside>
+          </div>
+          <p class="archive-note mono">↗ PULSA UNA CARPETA O ELIGE UN PROYECTO EN EL ÍNDICE. TODO SE PUEDE CAMBIAR.</p>
+        </div>
+      </section>
+      <section class="view view-about" id="aboutView" aria-labelledby="aboutHeading" hidden>
+        <div class="about-grid">
+          <div>
+            <p class="mono about-label">NOTA AL MARGEN / SOBRE ESTE SITIO</p>
+            <h2 class="about-title" id="aboutHeading">Un poco<br>de <em>todo.</em></h2>
+            <p class="about-copy">Esto no pretende ser una web de estudio ni un catálogo perfecto. Es un archivo personal para juntar proyectos de arquitectura, dibujos, fotomontajes, pruebas y ocurrencias que normalmente terminarían en carpetas perdidas en el ordenador.</p>
+            <p class="about-copy">Entra, abre el cajón y curiosea. El archivo irá creciendo conmigo.</p>
+            <button class="back-btn" type="button" data-nav="archive">← VOLVER AL ARCHIVADOR</button>
+          </div>
+          <div class="about-card">
+            <span class="mono">NOTA / Nº 000</span>
+            <h3>En obras<br>eternas.</h3>
+            <p>ESTE PORTFOLIO ES UN PRIMER BORRADOR. EL NOMBRE, LOS PROYECTOS Y LOS CONTENIDOS SE COMPLETARÁN POCO A POCO.</p>
+            <span style="position:absolute;right:35px;bottom:26px;font-size:70px" aria-hidden="true">↗</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer mono"><span>© 2026 — MI ARCHIVO PERSONAL</span><span>HECHO CON CURIOSIDAD Y UN POCO DE CAOS ✳</span><a href="#archivo" data-nav="archive">VER ARCHIVO ↗</a></footer>
+    <div class="project-overlay" id="projectOverlay" role="dialog" aria-modal="true" aria-label="Ficha de proyecto" aria-hidden="true">
+      <div class="project-sheet">
+        <div class="sheet-bar"><span class="mono" id="sheetReference">ARCHIVO / FICHA N.º 001</span><button class="close-project" type="button" id="closeProject" aria-label="Cerrar ficha">×</button></div>
+        <div class="sheet-content">
+          <div class="sheet-art"><div class="artwork" id="projectArtwork" aria-hidden="true"><div class="artwork-grid"></div><div class="artwork-shape a"></div><div class="artwork-shape b"></div><div class="artwork-shape c"></div><span class="artwork-number" id="artNumber">01 / 06</span><span class="artwork-word" id="artWord">ARCHIVO</span></div></div>
+          <div class="sheet-details">
+            <span class="demo-tag mono">FICHA DE EJEMPLO · CONTENIDO PROVISIONAL</span>
+            <p class="mono" id="projectCategory">ARQUITECTURA / 001</p>
+            <h3 id="projectTitle">Proyecto 01</h3>
+            <p id="projectDescription">Un espacio para enseñar tu trabajo.</p>
+            <div class="metadata">
+              <div><span class="mono">CATEGORÍA</span><strong id="projectMetaCategory">Arquitectura</strong></div>
+              <div><span class="mono">ESTADO</span><strong>Pendiente de contenido real</strong></div>
+            </div>
+            <button class="next-project" type="button" id="nextProject">SIGUIENTE FICHA →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="site-wipe" id="siteWipe" aria-hidden="true"><span>pasando página ↗</span></div>
+  <div class="magnifier" id="magnifier" aria-hidden="true">
+    <div class="lens-optics" id="lensOptics"><div class="lens-scene" id="lensScene"></div><div class="lens-center"></div></div>
+    <div class="lens-rim"></div><div class="lens-handle"></div>
+  </div>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <defs><filter id="glassWarp" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage id="warpTexture" result="warp" preserveAspectRatio="none"/><feDisplacementMap in="SourceGraphic" in2="warp" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></defs>
+  </svg>
 </body>
 </html>
