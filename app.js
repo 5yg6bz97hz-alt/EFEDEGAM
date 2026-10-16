@@ -24,7 +24,7 @@ function setDrawer(value){
 function closeProject(restore=true){
  const overlay=$("#projectOverlay");if(!overlay.classList.contains("is-visible"))return;
  overlay.classList.remove("is-visible");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";
- $(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
+ $$(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
  if(restore&&previousFocus)previousFocus.focus();
 }
 function setView(view,animate=true){
@@ -53,7 +53,7 @@ let picking=false;
 function pickFolder(i){
  if(picking || !drawerOpen)return;
  picking=true;
- $(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
+ $$(".folder-card").forEach(card=>card.classList.remove("is-picking","is-shifted"));
  const card=$$(".folder-card")[i];if(card)card.classList.add("is-picking");
  setTimeout(()=>{openProject(i);picking=false},reduced.matches?0:570);
 }
