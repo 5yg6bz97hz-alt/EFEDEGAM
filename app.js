@@ -18,7 +18,7 @@ projects.forEach((p,i)=>{
  btn.setAttribute("aria-label","Abrir proyecto: "+p[0]);btn.addEventListener("click",()=>pickFolder(i));btn.addEventListener("mouseenter",()=>fanCards(i));btn.addEventListener("focus",()=>fanCards(i));$("#fileStack").append(btn);
 });
 function setDrawer(value){
- drawerOpen=value;$("#cabinet").classList.toggle("is-open",value);$("#drawerToggle").textContent=value?"↑ CERRAR CAJÓN":"↓ ABRIR CAJÓN";
+ drawerOpen=value;$("#cabinet").classList.toggle("is-open",value);$("#drawerToggle").textContent=value?"↑ CERRAR CAJÓN CENTRAL":"↓ ABRIR CAJÓN CENTRAL";
  $("#drawerToggle").setAttribute("aria-expanded",String(value));$$(".folder-card").forEach(b=>b.tabIndex=value?0:-1);
 }
 function closeProject(restore=true){
