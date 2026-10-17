@@ -769,3 +769,16 @@ body.is-lens-on,body.is-lens-on button,body.is-lens-on a{cursor:none}
  .photo-cabinet .cabinet-sticker--ticket{font-size:6px}
  .photo-cabinet .cabinet-sticker--stamp{font-size:7px}
 }
+
+/* Keep all six index tabs readable as they rise in front of the open drawer. */
+.photo-cabinet.is-open .folder-stack{z-index:11}
+.photo-cabinet .folder-label{
+  display:block;position:absolute;
+  top:52%;left:10px;right:9px;
+  margin:0;font:600 14px/1.1 var(--serif);
+  letter-spacing:-.035em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  writing-mode:horizontal-tb;transform:none;
+}
+@media(max-width:540px){
+  .photo-cabinet .folder-label{top:48%;left:7px;font-size:11px}
+}
