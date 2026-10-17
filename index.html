@@ -57,26 +57,43 @@
       <section class="view view-archive" id="archiveView" aria-labelledby="archiveHeading" hidden>
         <div class="archive-wrap">
           <div class="archive-heading">
-            <div><div class="mono">SECCIÓN 01 &nbsp; / &nbsp; 6 CARPETAS POR DESCUBRIR</div><h2 id="archiveHeading">El archivador<span aria-hidden="true">.</span></h2></div>
-            <p>UN CAJÓN, MUCHAS COSAS.<br>ABRE. EXPLORA. DESCUBRE. ↙</p>
+            <div>
+              <div class="mono">EFEDEGAM / EXPEDIENTE N.º 001 — 006</div>
+              <h2 id="archiveHeading">El archivador<span aria-hidden="true">.</span></h2>
+            </div>
+            <p>UN ARCHIVO PERSONAL.<br>UN CAJÓN POR DESCUBRIR. ↙</p>
           </div>
-          <div class="archive-layout">
+          <div class="archive-layout cabinet-exhibition">
+            <div class="cabinet-side-note cabinet-side-note--left" aria-hidden="true">
+              <span class="cabinet-squiggle">↝</span><span>LO QUE NO CABE<br>EN UN PLANO</span>
+            </div>
             <div class="cabinet-zone">
-              <div class="cabinet" id="cabinet">
-                <div class="cabinet-case">
-                  <div class="cabinet-cavity"><div class="folder-stack" id="fileStack" aria-label="Carpetas de proyectos"></div></div>
+              <div class="photo-cabinet" id="cabinet">
+                <div class="photo-cabinet__body" aria-hidden="true">
+                  <img src="assets/archivador-original.jpg" alt="" loading="eager">
                 </div>
-                <div class="cabinet-top"><span>✳</span>ARCHIVO PERSONAL / CAJÓN 01<span>001—006</span></div>
+                <div class="photo-cabinet__hole" aria-hidden="true"></div>
+                <div class="folder-stack" id="fileStack" aria-label="Carpetas de proyectos"></div>
                 <div class="drawer-front" aria-hidden="true">
-                  <div class="drawer-handle"></div>
-                  <div class="drawer-plaque">PROYECTOS & OTRAS COSAS · Nº 01</div>
-                  <div class="drawer-stamp">ABIERTO<br>A CURIOSOS ↗</div>
+                  <div class="photo-cabinet__front-photo">
+                    <img src="assets/archivador-original.jpg" alt="">
+                  </div>
+                  <span class="cabinet-sticker cabinet-sticker--middle">PROYECTOS<br>001–006<br><b>↗</b></span>
                 </div>
-                <button class="drawer-toggle" id="drawerToggle" type="button" aria-expanded="false" aria-controls="fileStack">↓ ABRIR CAJÓN</button>
+                <img class="cabinet-decal cabinet-decal--red" src="assets/pegatina-roja.jpg" alt="" aria-hidden="true">
+                <img class="cabinet-decal cabinet-decal--sa" src="assets/pegatina-sa.jpg" alt="" aria-hidden="true">
+                <span class="cabinet-sticker cabinet-sticker--star" aria-hidden="true">★<small>IDEAS<br>EN CURSO</small></span>
+                <span class="cabinet-sticker cabinet-sticker--oval" aria-hidden="true">ARCHIVE<br>CLUB ✳</span>
+                <span class="cabinet-sticker cabinet-sticker--ticket" aria-hidden="true">EXPERIMENTAL<br>DEPARTMENT<br>— 2026 —</span>
+                <span class="cabinet-sticker cabinet-sticker--stamp" aria-hidden="true">OPEN<br>TO IDEAS</span>
+                <button class="drawer-toggle" id="drawerToggle" type="button" aria-expanded="false" aria-controls="fileStack">↓ ABRIR CAJÓN CENTRAL</button>
               </div>
             </div>
+            <div class="cabinet-side-note cabinet-side-note--right" aria-hidden="true">
+              <span class="cabinet-squiggle">✳</span><span>ARQUITECTURA<br>Y OTRAS COSAS</span>
+            </div>
           </div>
-          <p class="archive-note mono">✳ PULSA EN UNA CARPETA PARA SACARLA DEL ARCHIVO. &nbsp; <span>EL CAJÓN SE PUEDE ABRIR Y CERRAR.</span></p>
+          <p class="archive-note mono">PULSA PARA ABRIR O CERRAR EL CAJÓN · DESLIZA ENTRE LOS ARCHIVOS PARA EXPLORARLOS</p>
         </div>
       </section>
       <section class="view view-about" id="aboutView" aria-labelledby="aboutHeading" hidden>
