@@ -560,3 +560,212 @@ body.is-lens-on,body.is-lens-on button,body.is-lens-on a{cursor:none}
  .folder-stack .folder-card:nth-child(5){top:50%}
  .folder-stack .folder-card:nth-child(6){top:61%}
 }
+
+
+/* ============================================================
+   EFEDEGAM / METAL ARCHIVE V4
+   Actual photograph supplied in Drive; cropped to the body,
+   with an interactive middle drawer and paper file index.
+   ============================================================ */
+.view-archive{background:#2441c3;color:#f9f2e9;min-height:calc(100svh - 160px);overflow:visible;padding:12px clamp(12px,3vw,56px) 28px}
+.view-archive .archive-wrap{max-width:1600px}
+.view-archive .archive-heading{margin:0 auto;min-height:auto;padding:12px 6px 6px;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,.38)}
+.view-archive .archive-heading h2{font-size:clamp(49px,5.5vw,93px);margin:4px 0 10px;letter-spacing:-.08em}
+.view-archive .archive-heading p{font-size:11px;max-width:230px;padding-bottom:4px}
+.cabinet-exhibition.archive-layout{display:grid;grid-template-columns:minmax(100px,1fr) auto minmax(100px,1fr);gap:clamp(6px,3vw,70px);margin:0;align-items:center}
+.cabinet-exhibition .cabinet-zone{height:auto;min-height:0;width:auto;display:grid;place-items:center;margin:24px 0 12px;overflow:visible}
+.photo-cabinet{
+  position:relative;
+  aspect-ratio:417 / 906;
+  width:auto;
+  height:clamp(540px,76svh,850px);
+  max-width:88vw;
+  transform:none;
+  filter:drop-shadow(15px 14px 11px rgba(6,13,74,.3));
+  isolation:isolate;
+}
+.photo-cabinet__body{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.photo-cabinet__body img{position:absolute;top:-5.3%;left:-18%;height:110.4%;width:135%;max-width:none;object-fit:fill;user-select:none;-webkit-user-drag:none}
+.photo-cabinet__hole{
+  position:absolute;z-index:1;
+  left:3.6%;width:92.9%;top:32.4%;height:28.8%;
+  background:linear-gradient(#171a1e,#23272a 28%,#343a3d);
+  box-shadow:inset 0 15px 25px rgba(0,0,0,.72),inset 0 0 0 6px #535a5d,inset 0 0 0 8px #2a2e31;
+  opacity:0;transition:opacity .16s;pointer-events:none;
+}
+.photo-cabinet.is-open .photo-cabinet__hole{opacity:1}
+.photo-cabinet .drawer-front{
+  position:absolute;z-index:6;
+  left:3.6%;right:auto;top:32.4%;bottom:auto;
+  width:92.9%;height:28.8%;min-height:0;
+  background:transparent;box-shadow:none;border:0;border-radius:0;
+  display:block;padding:0;gap:0;
+  opacity:0;pointer-events:none;
+  transform:translateY(0) scale(1);
+  transform-origin:50% 10%;
+  transition:transform .85s cubic-bezier(.2,.93,.2,1),opacity .12s,filter .85s;
+}
+.photo-cabinet .photo-cabinet__front-photo{position:absolute;inset:0;overflow:hidden;border:1px solid rgba(43,46,47,.26);background:#9ea3a5}
+.photo-cabinet .photo-cabinet__front-photo img{
+  position:absolute;width:145.3%;height:383.4%;
+  left:-23.3%;top:-130.9%;object-fit:fill;max-width:none;
+  user-select:none;-webkit-user-drag:none;
+}
+.photo-cabinet.is-open .drawer-front{
+  opacity:1;
+  transform:translateY(65%) scale(1.085);
+  box-shadow:0 14px 0 #707579,0 29px 31px rgba(16,21,25,.44);
+  filter:brightness(1.01)
+}
+.photo-cabinet .folder-stack{
+  position:absolute;z-index:4;inset:auto;
+  top:33%;left:8.2%;width:83.5%;height:27.3%;
+  padding:0;margin:0;display:block;
+  perspective:880px;
+  overflow:visible;pointer-events:none;
+}
+.photo-cabinet.is-open .folder-stack{pointer-events:auto}
+.photo-cabinet .folder-card{
+  position:absolute;left:0;top:0;z-index:2;
+  width:100%;height:28%;max-width:none;min-height:0;
+  padding:6px 10px 8px;border:1.5px solid #35312a;border-radius:3px;
+  box-shadow:0 3px 0 #a89770,0 5px 6px rgba(0,0,0,.28);
+  background:linear-gradient(110deg,#f1dca8,#fff2cb 48%,#e8d29c);
+  color:#30291f;opacity:0;
+  display:flex;align-items:stretch;justify-content:center;
+  transform:translateY(140%) rotateX(-21deg);
+  transition:transform .66s cubic-bezier(.18,.94,.25,1),opacity .24s,box-shadow .2s;
+  transform-origin:center bottom;
+  cursor:pointer;
+  will-change:transform;
+}
+.photo-cabinet .folder-card:before{
+  content:'';position:absolute;
+  left:calc(4% + 2%);top:-12px;width:34%;height:12px;
+  background:var(--c);border:1.5px solid #343029;
+  border-bottom:0;border-radius:5px 6px 0 0;
+}
+.photo-cabinet .folder-card:nth-child(2):before{left:31%}
+.photo-cabinet .folder-card:nth-child(3):before{left:61%}
+.photo-cabinet .folder-card:nth-child(4):before{left:12%}
+.photo-cabinet .folder-card:nth-child(5):before{left:44%}
+.photo-cabinet .folder-card:nth-child(6):before{left:64%}
+.photo-cabinet .folder-card:after{display:none}
+.photo-cabinet .folder-head{display:flex;align-items:center;justify-content:space-between;gap:3px;border:0;padding:0;width:100%;min-height:0;height:auto}
+.photo-cabinet .folder-num{font:600 10px/1.1 var(--mono);color:#5d523f;white-space:nowrap}
+.photo-cabinet .folder-category{background:var(--c);font:600 10px/1 var(--mono);padding:4px 6px;border:1px solid #5b4e39;max-width:63%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-cabinet .folder-action{font:700 16px/1 var(--mono)}
+.photo-cabinet .folder-label,.photo-cabinet .folder-foot{display:none}
+.photo-cabinet .folder-card:nth-child(1){top:4%;z-index:1}
+.photo-cabinet .folder-card:nth-child(2){top:17%;z-index:2}
+.photo-cabinet .folder-card:nth-child(3){top:30%;z-index:3}
+.photo-cabinet .folder-card:nth-child(4){top:43%;z-index:4}
+.photo-cabinet .folder-card:nth-child(5){top:56%;z-index:5}
+.photo-cabinet .folder-card:nth-child(6){top:69%;z-index:6}
+.photo-cabinet.is-open .folder-card{
+ opacity:1;transform:translateY(0) rotateX(0);
+ transition-delay:calc(var(--i) * 75ms)
+}
+.photo-cabinet.is-open .folder-card:hover,.photo-cabinet.is-open .folder-card:focus-visible{
+ z-index:15!important;filter:brightness(1.05);
+ transform:translateY(-38%) rotateX(-5deg) scale(1.045);
+ box-shadow:0 9px 0 #b2a17b,0 13px 19px rgba(0,0,0,.45);transition-delay:0s
+}
+.photo-cabinet.is-open .folder-card.is-shifted{transform:translateY(83%);transition-delay:0s;filter:none}
+.photo-cabinet.is-open .folder-card.is-picking,.photo-cabinet.is-open .folder-card.is-picking:hover{
+ z-index:18!important;transform:translateY(-100%) rotateX(-12deg) scale(1.075);
+ transition-delay:0s;box-shadow:0 15px 19px rgba(0,0,0,.4)
+}
+.photo-cabinet .drawer-toggle{
+ position:absolute;z-index:20;left:50%;bottom:-34px;transform:translateX(-50%);
+ min-width:220px;width:max-content;max-width:90%;
+ padding:14px 20px;font:700 11px/1 var(--mono);
+ letter-spacing:.08em;background:#fbea76;color:#292822;
+ border:2px solid #292822;border-radius:40px;
+ box-shadow:4px 5px 0 #15163b;
+ transition:background .2s,box-shadow .2s
+}
+.photo-cabinet .drawer-toggle:hover{background:#fff5ac}
+.cabinet-exhibition .cabinet-side-note{
+ max-width:300px;justify-self:center;
+ display:flex;flex-direction:column;gap:12px;
+ color:#e9e7dc;opacity:.92;
+ font:600 clamp(11px,1.15vw,16px)/1.7 var(--mono);
+ letter-spacing:.1em;
+}
+.cabinet-side-note--left{transform:rotate(-9deg);text-align:right}
+.cabinet-side-note--right{transform:rotate(8deg);text-align:left}
+.cabinet-squiggle{font:italic 100px/1 var(--serif);color:#f8e581}
+.cabinet-exhibition .cabinet-side-note--right .cabinet-squiggle{font-style:normal;font-size:75px;color:#eaa1ab}
+.view-archive .archive-note{margin:44px auto 0;position:relative;z-index:2;text-align:center;font-size:10px}
+.photo-cabinet .cabinet-decal{
+ position:absolute;z-index:8;display:block;object-fit:cover;max-width:none;
+ pointer-events:none;mix-blend-mode:multiply;
+ filter:contrast(1.13) saturate(1.22);box-shadow:none;
+}
+.photo-cabinet .cabinet-decal--red{width:29%;left:12%;top:17%;transform:rotate(-11deg)}
+.photo-cabinet .cabinet-decal--sa{width:25%;left:60%;top:71%;transform:rotate(12deg)}
+.photo-cabinet .cabinet-sticker{
+ position:absolute;z-index:9;pointer-events:none;
+ display:grid;place-items:center;text-align:center;
+ font-family:var(--mono);
+ box-shadow:2px 3px 4px rgba(0,0,0,.18);
+}
+.photo-cabinet .cabinet-sticker--star{
+ left:64%;top:23%;width:20%;aspect-ratio:1;
+ border:2px solid #2d2924;border-radius:50%;
+ background:#ffe858;color:#2c2c31;transform:rotate(13deg);
+ font:bold clamp(34px,4vw,62px)/.7 var(--sans);
+ display:flex;flex-direction:column;gap:12px;justify-content:center;
+}
+.cabinet-sticker--star small{font:700 8px/1.05 var(--mono)}
+.photo-cabinet .cabinet-sticker--oval{
+ left:9%;top:75%;width:27%;height:7%;
+ border-radius:50%;border:2px solid #f6eee9;
+ background:#ed5964;color:#fff;transform:rotate(-13deg);
+ font:700 10px/1.1 var(--mono);
+}
+.photo-cabinet .cabinet-sticker--ticket{
+ left:13%;top:87%;width:38%;height:5.6%;
+ background:#faefc5;color:#142e92;
+ border:2px dashed #244ab5;transform:rotate(7deg);
+ font:700 9px/1.05 var(--mono);
+}
+.photo-cabinet .cabinet-sticker--stamp{
+ right:14%;top:86%;width:23%;aspect-ratio:1;border-radius:50%;
+ border:3px double #dc594b;color:#dc594b;
+ background:rgba(235,223,201,.8);font:700 10px/1 var(--mono);transform:rotate(17deg);
+}
+.photo-cabinet .cabinet-sticker--middle{
+ right:6%;top:40%;width:28%;height:22%;
+ background:#f7efcf;border:1px solid #252c32;
+ transform:rotate(-9deg);font:700 7px/1.1 var(--mono);z-index:3;
+}
+.cabinet-sticker--middle b{font-size:14px}
+@media(max-width:830px){
+ .cabinet-exhibition.archive-layout{grid-template-columns:1fr}
+ .cabinet-exhibition .cabinet-side-note{display:none}
+ .view-archive .archive-heading h2{font-size:clamp(45px,8vw,75px)}
+ .photo-cabinet{height:clamp(500px,73svh,750px)}
+}
+@media(max-width:540px){
+ .view-archive{padding:8px 10px 35px}
+ .view-archive .archive-heading{padding:5px 3px 12px;align-items:center}
+ .view-archive .archive-heading h2{font-size:clamp(37px,9vw,58px);margin-bottom:0}
+ .view-archive .archive-heading p{font-size:8px;max-width:115px}
+ .cabinet-exhibition .cabinet-zone{margin:23px 0 15px;min-height:0}
+ .photo-cabinet{height:clamp(450px,70svh,640px);max-width:86vw}
+ .photo-cabinet .folder-card{height:33%;padding:4px 6px 8px}
+ .photo-cabinet .folder-card:before{top:-9px;height:9px}
+ .photo-cabinet .folder-head{min-height:0}
+ .photo-cabinet .folder-num{font-size:8px}
+ .photo-cabinet .folder-category{font-size:8px;padding:3px 4px;max-width:57%}
+ .photo-cabinet .folder-action{font-size:12px}
+ .photo-cabinet .drawer-toggle{min-width:180px;padding:12px 14px;font-size:9px;bottom:-28px}
+ .view-archive .archive-note{margin:30px auto 10px;font-size:8px;line-height:1.6}
+ .photo-cabinet .cabinet-sticker--star{gap:6px;font-size:30px}
+ .photo-cabinet .cabinet-sticker--star small{font-size:5px}
+ .photo-cabinet .cabinet-sticker--oval{font-size:7px}
+ .photo-cabinet .cabinet-sticker--ticket{font-size:6px}
+ .photo-cabinet .cabinet-sticker--stamp{font-size:7px}
+}
