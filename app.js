@@ -39,17 +39,54 @@ function buildFolders(){
  holder.addEventListener("mouseleave",clearFan);
  holder.addEventListener("focusout",event=>{if(!holder.contains(event.relatedTarget))clearFan()});
 }
+let cabinetFocused=false;
+let openingTimer=null;
+let lockedTimer=null;
 function setDrawer(isOpen){
  drawerOpen=Boolean(isOpen);
  const cabinet=one("#cabinet");
  cabinet.classList.toggle("is-open",drawerOpen);
- one("#drawerToggle").setAttribute("aria-expanded",String(drawerOpen));
- one("#drawerToggleLabel").textContent=drawerOpen?"Cerrar el cajón central":"Abrir el cajón central";
- one(".control-icon").textContent=drawerOpen?"↥":"↧";
- one("#drawerInstruction").textContent=drawerOpen?"Pasa por las pestañas o elige una carpeta.":"Abre el cajón para descubrir las carpetas.";
+ const mid=one('[data-drawer="middle"]');
+ mid.setAttribute("aria-expanded",String(drawerOpen));
+ mid.setAttribute("aria-label",drawerOpen?"Cerrar el cajón central":"Abrir el cajón central de proyectos");
+ one("#drawerInstruction").textContent=drawerOpen?"Elige una carpeta; pulsa el frente central para cerrar.":"Solo el cajón central se puede abrir. Los otros dos están cerrados con llave.";
  many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted")});
  many("#touchFileButtons button").forEach(btn=>{btn.disabled=!drawerOpen});
- scheduleLensRefresh();setTimeout(scheduleLensRefresh,850);
+ one("#touchFiles").hidden=!drawerOpen;
+ scheduleLensRefresh();setTimeout(scheduleLensRefresh,780);
+}
+function focusCabinet(){
+ if(cabinetFocused)return;
+ cabinetFocused=true;
+ one("#cabinet").classList.add("is-focused");
+ one("#drawerInstruction").textContent="Ahora puedes probar los tres cajones. Solo se abre el central.";
+ scheduleLensRefresh();setTimeout(scheduleLensRefresh,900);
+}
+function jiggleLocked(kind){
+ const face=one(kind==="top"?"#topDrawer":"#bottomDrawer");
+ face.classList.remove("locked-jiggle");
+ void face.offsetWidth; // restart CSS animation on repeated clicks
+ face.classList.add("locked-jiggle");
+ one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Prueba el del medio.";
+ clearTimeout(lockedTimer);
+ lockedTimer=setTimeout(()=>face.classList.remove("locked-jiggle"),500);
+ scheduleLensRefresh();
+}
+function clickDrawer(kind){
+ if(!cabinetFocused){
+  focusCabinet();
+  clearTimeout(openingTimer);
+  openingTimer=setTimeout(()=>{
+   if(activeView!=="archive")return;
+   if(kind==="middle")setDrawer(true);
+   else jiggleLocked(kind);
+  },reduced.matches?0:730);
+ }else if(kind==="middle"){
+  clearTimeout(openingTimer);
+  setDrawer(!drawerOpen);
+ }else{
+  jiggleLocked(kind);
+ }
 }
 function fanCards(index){
  if(!drawerOpen||picking||!finePointer.matches)return;
@@ -101,6 +138,8 @@ function switchView(view,animate=true){
  const apply=()=>{
   for(const [name,element] of Object.entries(views))element.hidden=name!==view;
   activeView=view;
+  document.body.classList.toggle("is-archive",view==="archive");
+  if(view!=="archive"){clearTimeout(openingTimer);setDrawer(false);cabinetFocused=false;one("#cabinet").classList.remove("is-focused")}
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
@@ -128,7 +167,13 @@ many("[data-view]").forEach(link=>link.addEventListener("click",event=>{
 }));
 addEventListener("popstate",()=>switchView(routeFromHash(),false));
 addEventListener("hashchange",()=>switchView(routeFromHash(),false));
-one("#drawerToggle").addEventListener("click",()=>setDrawer(!drawerOpen));
+many("[data-drawer]").forEach(button=>{
+ button.addEventListener("click",event=>{event.stopPropagation();clickDrawer(button.dataset.drawer)});
+});
+one("#cabinet").addEventListener("click",event=>{
+ if(event.target.closest(".file-tab")||event.target.closest(".drawer-hit"))return;
+ focusCabinet();
+});
 one("#closeProject").addEventListener("click",()=>closeProject());
 one("#nextProject").addEventListener("click",()=>openProject((selectedProject+1)%projects.length));
 one("#projectModal").addEventListener("click",event=>{if(event.target===event.currentTarget)closeProject()});
