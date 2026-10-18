@@ -128,3 +128,14 @@ body.is-archive .cursor-lens{filter:drop-shadow(0 1px 3px #fff7)}
 @media(max-width:880px){#archiveView .archive-stage-v5{grid-template-columns:minmax(0,1fr);min-height:calc(100svh - 145px)}#archiveView .archive-margin{display:none}#archiveView .cabinet-scene-v5{padding:20px 0 10px}#archiveView .cabinet{max-width:420px;width:min(90vw,420px)}#archiveView .scene-kicker{margin-bottom:-5px}}
 @media(max-width:650px){#archiveView.view-archive{padding:10px 12px 25px}#archiveView .archive-stage-v5{min-height:auto;padding:0}#archiveView .cabinet{width:min(90vw,370px);transform:scale(.87);margin:-20px 0}#archiveView .cabinet.is-focused{transform:scale(1)}#archiveView .cabinet-instruction{margin:15px 0;font-size:9px}#archiveView .scene-kicker{font-size:9px}#archiveView .drawer-hit:hover:before{display:none}#archiveView .touch-files:not([hidden]){max-width:520px;display:block;margin:28px auto 20px}#archiveView .touch-files:not([hidden]) #touchFileButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
 @media(prefers-reduced-motion:reduce){#archiveView .cabinet.is-focused .drawer-top.locked-jiggle,#archiveView .cabinet.is-focused .drawer-bottom.locked-jiggle{animation:none!important;outline:3px dashed #ffe363}}
+
+/* The two inaccessible drawers carry matching little lock plates. */
+#archiveView .drawer-top::after,#archiveView .drawer-bottom::after{
+ content:"⌕";position:absolute;z-index:6;right:4.5%;top:5%;
+ width:19px;height:19px;display:grid;place-items:center;
+ border-radius:50%;border:2px solid #545a59;
+ background:radial-gradient(circle at 40% 30%,#b3b6b2,#616766 70%);
+ box-shadow:inset 0 0 2px #1118,0 1px 1px #e0e1d866;
+ color:#252b2c;font:bold 16px/1 var(--sans);
+ pointer-events:none;
+}
