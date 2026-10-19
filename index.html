@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="venetian-v8.css">
   <link rel="stylesheet" href="venetian-v9.css">
   <link rel="stylesheet" href="archive-wall-v10.css">
+  <link rel="stylesheet" href="archive-v11.css">
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -63,6 +64,10 @@
     </div>
   </div>
 </section>
+    <section id="voidView" class="view-void" hidden aria-labelledby="voidTitle">
+      <h2 id="voidTitle" class="visually-hidden">EL VACÍO — próximamente</h2>
+      <a href="#archivo" class="void-back" data-view="archive" aria-label="Volver al archivador"><span aria-hidden="true">←</span> VOLVER AL ARCHIVO</a>
+    </section>
     <section id="aboutView" class="view view-about" hidden aria-labelledby="aboutTitle">
       <div class="about-content">
         <span class="eyebrow">UNA NOTA AL MARGEN / 003</span>
@@ -91,6 +96,8 @@
     </div>
   </div>
 </div>
+<div class="void-transition" id="voidTransition" hidden aria-hidden="true"><div class="void-warp" aria-hidden="true"><div class="void-spiral"></div><div class="void-event-horizon"></div><div class="void-light-ring"></div><div class="void-core"></div></div></div>
+<svg class="void-svg-filters" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs><filter id="void-distortion" x="-25%" y="-25%" width="150%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="8" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="44" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 <div class="transition-screen" id="transitionScreen" aria-hidden="true"><span>abriendo archivos ↗</span></div>
 <div class="cursor-lens" id="cursorLens" aria-hidden="true">
   <div class="cursor-glass"><div class="cursor-replica" id="cursorReplica"></div></div>

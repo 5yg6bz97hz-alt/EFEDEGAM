@@ -12,21 +12,21 @@ const one=selector=>document.querySelector(selector);
 const many=selector=>Array.from(document.querySelectorAll(selector));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer=matchMedia("(pointer:fine)");
-const views={home:one("#homeView"),archive:one("#homeView"),about:one("#aboutView")};
+const views={home:one("#homeView"),archive:one("#homeView"),about:one("#aboutView"),vacio:one("#voidView")};
 let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFocus=null,navigating=false;
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
 let cabinetFocused=false,openingTimer=null,lockedTimer=null;
 const wall=one("#cabinet"),cells=one("#cabinetCells");
-let hero=null,layoutIsSmall=null;
-function makeUnit(index,col,row,heroCell){
- const id=String(index+1).padStart(3,"0");
- const ajar=[3,9,16,24,30,46,52,61,69].includes(index) && !heroCell;
- const paper=[3,16,24,30,52,69].includes(index) && !heroCell;
+let hero=null,voidDrawer=null,layoutIsSmall=null,voidBusy=false,voidTimer=null;
+function makeUnit(index,col,row,heroCell,voidCell){
+ const id=heroCell?"023":voidCell?"099":String(index+1+(index>=22?1:0)).padStart(3,"0");
+ const ajar=[3,9,16,24,30,46,52,61,69].includes(index) && !heroCell && !voidCell;
+ const paper=[3,16,24,30,52,69].includes(index) && !heroCell && !voidCell;
  const unit=document.createElement("div");
- unit.className="drawer-unit"+(heroCell?" is-hero":"")+(ajar?" is-ajar":"");
+ unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(ajar?" is-ajar":"");
  unit.style.gridColumn=String(col+1);
  unit.style.gridRow=String(row+1);
- unit.dataset.drawer=heroCell?"middle":"locked";
+ unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":"locked";
  unit.dataset.number=id;
  if(paper){
   const slip=document.createElement("span");slip.className="paper-slip";
@@ -45,12 +45,12 @@ function makeUnit(index,col,row,heroCell){
   const files=document.createElement("div");files.className="file-tray-files";files.id="fileStack";files.setAttribute("aria-label","Carpetas del cajón de proyectos");unit.append(files);
  }
  const front=document.createElement("div");front.className="drawer-face";
- front.innerHTML='<span class="drawer-card-label">'+(heroCell?"PROYECTOS":("F. "+id))+'</span><span class="drawer-handle"></span><span class="drawer-id">'+id+'</span>';
+ front.innerHTML='<span class="drawer-card-label">'+(heroCell?"PROYECTOS":voidCell?"ARCHIVO ESPECIAL":("F. "+id))+'</span><span class="drawer-handle"></span><span class="drawer-id">'+id+'</span>'+(voidCell?'<span class="drawer-void-sticker">EL VACÍO</span>':'');
  const button=document.createElement("button");
  button.type="button";button.className="drawer-click";
- button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón central de proyectos":"Cajón "+id+" cerrado con llave");
+ button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":"Cajón "+id+" cerrado con llave");
  if(heroCell){button.setAttribute("aria-controls","fileStack");button.setAttribute("aria-expanded","false")}
- button.addEventListener("click",()=>clickDrawer(unit,heroCell));
+ button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell));
  front.append(button);unit.append(front);
  return unit;
 }
@@ -61,12 +61,15 @@ function buildWall(){
  const cols=small?7:11,rows=small?8:7;
  wall.style.setProperty("--cols",String(cols));wall.style.setProperty("--rows",String(rows));
  const centerRow=Math.floor(rows/2),centerCol=Math.floor(cols/2);
+ hero=null;voidDrawer=null;
  const fragment=document.createDocumentFragment();
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const i=r*cols+c;
   const isHero=r===centerRow&&c===centerCol;
-  const unit=makeUnit(i,c,r,isHero);
+  const isVoid=r===(small?2:2)&&c===(small?5:9);
+  const unit=makeUnit(i,c,r,isHero,isVoid);
   if(isHero)hero=unit;
+  if(isVoid)voidDrawer=unit;
   fragment.append(unit);
  }
  cells.replaceChildren(fragment);
@@ -112,7 +115,7 @@ function setDrawer(open){
  many("#fileStack .file-tab, #touchFileButtons button").forEach(button=>button.disabled=!drawerOpen);
  one("#touchFiles").hidden=!drawerOpen;
  if(!drawerOpen)clearFan();
- one("#drawerInstruction").textContent=drawerOpen?"Selecciona una carpeta. Pulsa el frontal para cerrar.":"Pulsa el cajón de PROYECTOS para acercarte.";
+ one("#drawerInstruction").textContent=drawerOpen?"Selecciona una carpeta. Pulsa el frontal para cerrar.":"Pulsa el cajón 023 de PROYECTOS para acercarte. El 099 guarda otro secreto.";
  scheduleLensRefresh();setTimeout(scheduleLensRefresh,1100);
 }
 function focusCabinet(){
@@ -122,17 +125,20 @@ function focusCabinet(){
 }
 function resetCabinet(){
  clearTimeout(openingTimer);
- setDrawer(false);cabinetFocused=false;wall.classList.remove("is-zoomed");
+ setDrawer(false);cabinetFocused=false;wall.classList.remove("is-zoomed","is-void-zoom");
+ wall.style.removeProperty("transform-origin");
  scheduleLensRefresh();
 }
 function jiggleLocked(unit){
  unit.classList.remove("is-shaking");void unit.offsetWidth;
  unit.classList.add("is-shaking");
- one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Busca PROYECTOS.";
+ one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Busca el 023 o el 099.";
  clearTimeout(lockedTimer);
  lockedTimer=setTimeout(()=>unit.classList.remove("is-shaking"),500);
 }
-function clickDrawer(unit,isHero){
+function clickDrawer(unit,isHero,isVoid){
+ if(voidBusy)return;
+ if(isVoid){enterVoid(unit);return}
  if(!isHero){jiggleLocked(unit);return}
  if(drawerOpen){
   setDrawer(false);
@@ -146,6 +152,44 @@ function clickDrawer(unit,isHero){
   focusCabinet();clearTimeout(openingTimer);
   openingTimer=setTimeout(()=>setDrawer(true),reduced.matches?0:1180);
  }else setDrawer(true);
+}
+function enterVoid(unit){
+ if(voidBusy||activeView!=="archive")return;
+ voidBusy=true;
+ clearTimeout(openingTimer);
+ if(drawerOpen)setDrawer(false);
+ cabinetFocused=false;
+ wall.classList.remove("is-zoomed");
+ const x=(unit.offsetLeft+unit.offsetWidth/2)/wall.offsetWidth*100;
+ const y=(unit.offsetTop+unit.offsetHeight/2)/wall.offsetHeight*100;
+ wall.style.transformOrigin=x.toFixed(2)+"% "+y.toFixed(2)+"%";
+ voidDrawer=unit;
+ unit.classList.add("is-portal-awake");
+ const transition=one("#voidTransition");
+ const target=unit.getBoundingClientRect();
+ transition.style.setProperty("--portal-x",(target.left+target.width/2).toFixed(1)+"px");
+ transition.style.setProperty("--portal-y",(target.top+target.height/2).toFixed(1)+"px");
+ transition.hidden=false;
+ transition.classList.remove("is-exiting");
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  wall.classList.add("is-void-zoom");
+  transition.classList.add("is-active");
+  scheduleLensRefresh();
+ }));
+ const duration=reduced.matches?75:1700;
+ clearTimeout(voidTimer);
+ voidTimer=setTimeout(()=>{
+  history.pushState({view:"vacio"},"","#vacio");
+  switchView("vacio",false);
+  transition.classList.add("is-exiting");
+  setTimeout(()=>{
+   transition.classList.remove("is-active","is-exiting");
+   transition.hidden=true;
+   unit.classList.remove("is-portal-awake");
+   voidBusy=false;
+   scheduleLensRefresh();
+  },reduced.matches?10:580);
+ },duration);
 }
 function sweepCards(position){
  if(!drawerOpen||picking)return;
@@ -208,11 +252,14 @@ function switchView(view,animate=true){
  if(!views[view]||navigating||view===activeView)return;
  closeProject(false);
  const apply=()=>{
-  one("#homeView").hidden=view==="about";one("#aboutView").hidden=view!=="about";
+  one("#homeView").hidden=view==="about"||view==="vacio";
+  one("#aboutView").hidden=view!=="about";
+  one("#voidView").hidden=view!=="vacio";
   one("#archiveView").inert=view!=="archive";
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
+  document.body.classList.toggle("is-void",view==="vacio");
   if(view==="home"){resetBlindsForHome();resetCabinet()}
   else if(view==="archive")openBlindsVisual();
   else resetCabinet();
@@ -232,11 +279,11 @@ function switchView(view,animate=true){
   },490);
  }else apply();
 }
-const routeFromHash=()=>location.hash==="#archivo"?"archive":location.hash==="#sobre-mi"?"about":"home";
+const routeFromHash=()=>location.hash==="#vacio"?"vacio":location.hash==="#archivo"?"archive":location.hash==="#sobre-mi"?"about":"home";
 many("[data-view]").forEach(link=>link.addEventListener("click",event=>{
  event.preventDefault();if(navigating)return;
  const view=link.dataset.view;if(activeView===view)return;
- history.pushState({view},"",view==="home"?"#inicio":view==="archive"?"#archivo":"#sobre-mi");
+ history.pushState({view},"",view==="home"?"#inicio":view==="archive"?"#archivo":view==="vacio"?"#vacio":"#sobre-mi");
  switchView(view);
 }));
 addEventListener("popstate",()=>switchView(routeFromHash(),false));
@@ -246,6 +293,9 @@ one("#nextProject").addEventListener("click",()=>openProject((selectedProject+1)
 one("#projectModal").addEventListener("click",event=>{if(event.target===event.currentTarget)closeProject()});
 addEventListener("keydown",event=>{
  if(event.key==="Escape"){
+  if(activeView==="vacio"){
+   history.pushState({view:"archive"},"","#archivo");switchView("archive",false);return;
+  }
   if(!one("#projectModal").hidden)closeProject();
   else if(drawerOpen||cabinetFocused)resetCabinet();
   return;
