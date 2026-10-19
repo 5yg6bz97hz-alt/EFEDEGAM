@@ -10,12 +10,13 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="cabinet-v5.css">
   <link rel="stylesheet" href="cabinet-v6.css">
+  <link rel="stylesheet" href="detective-entry.css">
   <script src="app.js" defer></script>
 </head>
 <body>
 <div id="siteFrame">
   <header class="site-header">
-    <a href="#inicio" class="wordmark" data-view="home" aria-label="EFEDEGAM, ir a inicio">EFEDEGAM<span class="wordmark-mark" aria-hidden="true">✳</span></a>
+    <a href="#inicio" class="wordmark" data-view="home" aria-label="EFEDEGAM, ir a inicio">EFEDEGAM</a>
     <nav aria-label="Navegación principal" class="nav">
       <a href="#archivo" data-view="archive">Archivo <span aria-hidden="true">↗</span></a>
       <a href="#sobre-mi" data-view="about">Sobre esto</a>
@@ -23,31 +24,47 @@
     <span class="nav-edition">PORTFOLIO PERSONAL<br>EDICIÓN 001 / 2026</span>
   </header>
   <main>
-    <section id="homeView" class="view view-home" aria-labelledby="homeTitle">
-      <div class="home-topline"><span>01 / PORTFOLIO PERSONAL</span><span>NO ES UN ESTUDIO. ES UN ARCHIVO.</span></div>
-      <div class="home-hero">
-        <div class="home-heading">
-          <p class="home-intro-tag"><span class="alive-dot"></span> BIENVENIDO A MI PEQUEÑO DESORDEN</p>
-          <h1 id="homeTitle">Un archivo<br>de <em>cosas</em><br>que hago<span class="punctuation">.</span></h1>
-          <div class="home-description">
-            <p>Arquitectura, dibujos, fotomontajes y otras cosas que no sabía dónde guardar.</p>
-            <button class="enter-button" type="button" data-view="archive">Entrar al archivador <span aria-hidden="true">↗</span></button>
-          </div>
-        </div>
-        <div class="home-art" aria-hidden="true">
-          <div class="art-caption">OBJETO Nº 001 — MATERIAL DE ARCHIVO</div>
-          <div class="art-shadow"></div>
-          <div class="art-sheet art-sheet--yellow"><span>IDEAS EN TRÁNSITO</span><strong>01</strong></div>
-          <div class="art-sheet art-sheet--pink"><span>IMÁGENES / DIBUJOS</span><i>✳</i></div>
-          <div class="art-sheet art-sheet--blue"><span>UNA COSA LLEVA A OTRA</span><b>¿Y<br>SI...?</b></div>
-          <div class="art-stamp">ARCHIVO<br>ABIERTO<br>↗</div>
-        </div>
+    <section id="homeView" class="view view-home home-detective" aria-labelledby="homeTitle">
+  <h1 class="visually-hidden" id="homeTitle">EFEDEGAM — Archivo personal</h1>
+  <div class="detective-entry" id="detectiveEntry">
+    <div class="detective-set" aria-hidden="true">
+  <div class="room-wall"></div><div class="room-floor"></div><div class="room-light room-light--left"></div><div class="room-light room-light--right"></div>
+  <div class="detective-lamp detective-lamp--left"><i></i></div><div class="detective-lamp detective-lamp--right"><i></i></div>
+  <div class="detective-shelves"><span></span><span></span><span></span></div>
+  <div class="detective-board"><b>ARCH. / 01</b><span>✳</span><i></i></div>
+  <div class="detective-desk"><div class="desk-files"></div><div class="desk-books"></div></div>
+  <div class="detective-boxes"><span></span><span></span></div>
+</div>
+    <img class="entry-cabinet" src="assets/archivador-cerrado-v6.webp" alt="" aria-hidden="true" width="400" height="521">
+    <div class="venetian-window" id="venetianWindow">
+      <div class="venetian-headrail" aria-hidden="true"></div>
+      <div class="venetian-blinds" id="venetianBlinds" aria-hidden="true">
+        <div class="venetian-slats" id="venetianSlats"></div>
+        <div class="blind-ladder blind-ladder--left"></div><div class="blind-ladder blind-ladder--middle"></div>
       </div>
-      <div class="home-bottomline"><span>RECOPILADO SIN ORDEN APARENTE</span><span>DESLIZA, INVESTIGA, ABRE CAJONES ↘</span></div>
-    </section>
+      <div class="blind-title" id="blindTitle" aria-hidden="true">
+        <strong>EFEDEGAM</strong><span>ARQUITECTURA / IMÁGENES / OBJETOS / PROYECTOS</span>
+      </div>
+      <button id="blindCord" class="blind-cord" type="button" aria-label="Tirar de la cuerda para levantar la persiana y entrar al archivo">
+        <span class="cord-fiber cord-fiber--one"></span><span class="cord-fiber cord-fiber--two"></span><span class="cord-knob"></span>
+        <span class="cord-pull-label">TIRA DE LA CUERDA <b>↓</b></span>
+      </button>
+      <p class="blind-help" id="blindHelp">Desliza el cursor por las lamas. Tira de la cuerda para entrar.</p>
+      <button class="entry-access" id="blindKeyboardButton" type="button">Entrar al archivo <span aria-hidden="true">↗</span></button>
+    </div>
+  </div>
+</section>
     <section id="archiveView" class="view view-archive" hidden aria-labelledby="archiveTitle">
       <h2 id="archiveTitle" class="visually-hidden">Archivador de proyectos</h2>
       <div class="archive-stage archive-stage-v6">
+        <div class="detective-set" aria-hidden="true">
+  <div class="room-wall"></div><div class="room-floor"></div><div class="room-light room-light--left"></div><div class="room-light room-light--right"></div>
+  <div class="detective-lamp detective-lamp--left"><i></i></div><div class="detective-lamp detective-lamp--right"><i></i></div>
+  <div class="detective-shelves"><span></span><span></span><span></span></div>
+  <div class="detective-board"><b>ARCH. / 01</b><span>✳</span><i></i></div>
+  <div class="detective-desk"><div class="desk-files"></div><div class="desk-books"></div></div>
+  <div class="detective-boxes"><span></span><span></span></div>
+</div>
         <div class="cabinet-scene cabinet-scene-v6">
           <div class="cabinet cabinet-photographic" id="cabinet" aria-label="Archivador antiguo de tres cajones; el central contiene proyectos">
             <img class="cabinet-image cabinet-image--closed" src="assets/archivador-cerrado-v6.webp" alt="" aria-hidden="true" draggable="false" width="400" height="521">

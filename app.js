@@ -36,6 +36,12 @@ function buildFolders(){
   shortcut.addEventListener("click",()=>pickFolder(index));
   touch.append(shortcut);
  });
+ holder.addEventListener("pointermove",event=>{
+  if(!drawerOpen||picking||event.pointerType!=="mouse")return;
+  const rect=holder.getBoundingClientRect();
+  const pos=Math.max(0,Math.min(projects.length-1,((event.clientY-rect.top)/Math.max(1,rect.height))*(projects.length-1)));
+  sweepCards(pos);
+ });
  holder.addEventListener("mouseleave",clearFan);
  holder.addEventListener("focusout",event=>{if(!holder.contains(event.relatedTarget))clearFan()});
 }
@@ -54,7 +60,7 @@ function setDrawer(isOpen){
  many("#cabinetClosedControls button").forEach(button=>button.disabled=drawerOpen);
  many("#cabinetOpenControls > button").forEach(button=>button.disabled=!drawerOpen);
  one("#drawerInstruction").textContent=drawerOpen?"Elige una carpeta; pulsa el frente central para cerrar.":"Solo el cajón central se puede abrir. Los otros dos están cerrados con llave.";
- many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted")});
+ many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale")});
  many("#touchFileButtons button").forEach(btn=>{btn.disabled=!drawerOpen});
  one("#touchFiles").hidden=!drawerOpen;
  scheduleLensRefresh();setTimeout(scheduleLensRefresh,780);
@@ -93,21 +99,34 @@ function clickDrawer(kind){
   jiggleLocked(kind);
  }
 }
-function fanCards(index){
+function sweepCards(position){
  if(!drawerOpen||picking||!finePointer.matches)return;
- many(".file-tab").forEach((card,i)=>card.classList.toggle("is-shifted",i>index));
- scheduleLensRefresh();
+ const cards=many(".file-tab");
+ cards.forEach((card,i)=>{
+  const distance=Math.abs(i-position);
+  const rise=Math.max(0,1-distance);
+  const shift=rise>0 ? -42*rise : (i>position?22:0);
+  card.style.setProperty("--paper-offset",shift.toFixed(1)+"%");
+  card.style.setProperty("--paper-scale",(1+rise*.045).toFixed(3));
+  card.classList.toggle("is-under-hand",rise>.35);
+  card.classList.toggle("is-shifted",i>position);
+ });
 }
+function fanCards(index){sweepCards(index)}
 function clearFan(){
  if(picking)return;
- many(".file-tab").forEach(card=>card.classList.remove("is-shifted"));
+ many(".file-tab").forEach(card=>{
+  card.classList.remove("is-shifted","is-under-hand");
+  card.style.removeProperty("--paper-offset");
+  card.style.removeProperty("--paper-scale");
+ });
  scheduleLensRefresh();
 }
 function pickFolder(index){
  if(!drawerOpen||picking)return;
  picking=true;
  const cards=many(".file-tab");
- cards.forEach(card=>card.classList.remove("is-shifted","is-selected"));
+ cards.forEach(card=>{card.classList.remove("is-shifted","is-selected","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale")});
  cards[index].classList.add("is-selected");
  setTimeout(()=>{
   picking=false;
@@ -148,6 +167,7 @@ function switchView(view,animate=true){
   for(const [name,element] of Object.entries(views))element.hidden=name!==view;
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
+  document.body.classList.toggle("is-home",view==="home");
   if(view!=="archive"){clearTimeout(openingTimer);setDrawer(false);cabinetFocused=false;one("#cabinet").classList.remove("is-focused")}
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
@@ -219,8 +239,8 @@ function positionLens(){
  if(!lensEnabled)return;
  const lens=one("#cursorLens");
  lens.style.left=lensX+"px";lens.style.top=lensY+"px";
- const zoom=1.55;
- const half=50;
+ const zoom=1.5;
+ const half=39;
  const translateX=half-(lensX+scrollX)*zoom;
  const translateY=half-(lensY+scrollY)*zoom;
  one("#cursorReplica").style.transform="translate("+translateX+"px,"+translateY+"px) scale("+zoom+")";
@@ -254,6 +274,84 @@ addEventListener("resize",()=>{
   one("#cursorReplica").replaceChildren();
  }else scheduleLensRefresh();
 });
+
+/* Real venetian blind: each horizontal slat has its own tilt.
+   Pulling either cord (pointer drag) or activating the accessible button
+   raises the slats as a compact stack before revealing the archive. */
+const SLATS=38;
+const slatHost=one("#venetianSlats");
+const blind=one("#venetianWindow");
+let blindsOpened=false,blindPointerY=null,blindRAF=0,cordStartY=null,cordDrag=0,cordMoved=false;
+for(let i=0;i<SLATS;i++){
+ const slat=document.createElement("span");
+ slat.className="blind-slat";slat.style.setProperty("--i",i);
+ slat.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
+ slat.style.setProperty("--lift-delay",((SLATS-1-i)*11)+"ms");
+ slatHost.append(slat);
+}
+const slats=many(".blind-slat");
+function resetSlats(){
+ slats.forEach(s=>{s.style.removeProperty("--tilt");s.style.removeProperty("--light")});
+}
+one("#venetianBlinds").addEventListener("pointermove",event=>{
+ if(blindsOpened||!finePointer.matches||event.pointerType!=="mouse")return;
+ blindPointerY=event.clientY;
+ if(blindRAF)return;
+ blindRAF=requestAnimationFrame(()=>{
+  blindRAF=0;
+  const rect=slatHost.getBoundingClientRect();
+  const local=blindPointerY-rect.top;
+  const radius=Math.max(75,rect.height*.13);
+  slats.forEach((slat,i)=>{
+   const y=(i+.5)*rect.height/SLATS;
+   const strength=Math.max(0,1-Math.abs(y-local)/radius);
+   slat.style.setProperty("--tilt",(strength*29).toFixed(1)+"deg");
+   slat.style.setProperty("--light",strength.toFixed(2));
+  });
+ });
+},{passive:true});
+one("#venetianBlinds").addEventListener("pointerleave",resetSlats);
+function liftBlinds(){
+ if(blindsOpened)return;
+ blindsOpened=true;
+ resetSlats();
+ blind.classList.add("is-lifting");
+ one("#blindCord").disabled=true;
+ one("#blindKeyboardButton").disabled=true;
+ one("#blindHelp").textContent="Abriendo el archivo…";
+ const delay=reduced.matches?140:1780;
+ setTimeout(()=>{
+  if(activeView!=="home")return;
+  history.pushState({view:"archive"},"","#archivo");
+  switchView("archive",false);
+ },delay);
+}
+const cord=one("#blindCord");
+cord.addEventListener("pointerdown",event=>{
+ if(blindsOpened)return;
+ cordStartY=event.clientY;cordDrag=0;cordMoved=false;
+ cord.setPointerCapture(event.pointerId);
+ cord.classList.add("is-dragging");
+});
+cord.addEventListener("pointermove",event=>{
+ if(cordStartY===null||blindsOpened)return;
+ cordDrag=Math.max(0,Math.min(130,event.clientY-cordStartY));
+ cordMoved=cordMoved||cordDrag>8;
+ cord.style.setProperty("--cord-drag",cordDrag+"px");
+});
+cord.addEventListener("pointerup",event=>{
+ if(cordStartY===null)return;
+ const dragged=cordDrag;
+ cordStartY=null;cord.classList.remove("is-dragging");
+ cord.style.removeProperty("--cord-drag");
+ if(dragged>=38)liftBlinds();
+});
+cord.addEventListener("pointercancel",()=>{
+ cordStartY=null;cord.classList.remove("is-dragging");cord.style.removeProperty("--cord-drag");
+});
+cord.addEventListener("click",()=>{if(!cordMoved)liftBlinds();cordMoved=false});
+one("#blindKeyboardButton").addEventListener("click",liftBlinds);
+
 buildFolders();
 setDrawer(false);
 switchView(routeFromHash(),false);
