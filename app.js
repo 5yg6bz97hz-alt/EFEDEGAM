@@ -168,6 +168,7 @@ function switchView(view,animate=true){
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
+  if(view==="home"&&activeView==="home")resetBlindsForHome();
   if(view!=="archive"){clearTimeout(openingTimer);setDrawer(false);cabinetFocused=false;one("#cabinet").classList.remove("is-focused")}
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
@@ -311,6 +312,14 @@ one("#venetianBlinds").addEventListener("pointermove",event=>{
  });
 },{passive:true});
 one("#venetianBlinds").addEventListener("pointerleave",resetSlats);
+function resetBlindsForHome(){
+ blindsOpened=false;
+ blind.classList.remove("is-lifting");
+ one("#blindCord").disabled=false;
+ one("#blindKeyboardButton").disabled=false;
+ one("#blindHelp").textContent="Desliza el cursor por las lamas. Tira de la cuerda para entrar.";
+ resetSlats();
+}
 function liftBlinds(){
  if(blindsOpened)return;
  blindsOpened=true;
