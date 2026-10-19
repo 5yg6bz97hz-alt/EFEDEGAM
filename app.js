@@ -12,7 +12,7 @@ const one=selector=>document.querySelector(selector);
 const many=selector=>Array.from(document.querySelectorAll(selector));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer=matchMedia("(pointer:fine)");
-const views={home:one("#homeView"),archive:one("#archiveView"),about:one("#aboutView")};
+const views={home:one("#homeView"),archive:one("#homeView"),about:one("#aboutView")};
 let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFocus=null,navigating=false;
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
 function buildFolders(){
@@ -173,19 +173,22 @@ function switchView(view,animate=true){
  if(view===activeView)return;
  closeProject(false);
  const apply=()=>{
-  if(view==="archive"){
-   if(blind.parentElement!==views.archive)views.archive.prepend(blind);
-   blind.classList.add("is-lifting");blindsOpened=true;
-  } else if(view==="home"){
-   const entry=one("#detectiveEntry");
-   if(blind.parentElement!==entry)entry.append(blind);
-  }
-  for(const [name,element] of Object.entries(views))element.hidden=name!==view;
+  one("#homeView").hidden=view==="about";
+  one("#aboutView").hidden=view!=="about";
+  one("#archiveView").inert=view!=="archive";
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
-  if(view==="home"&&activeView==="home")resetBlindsForHome();
-  if(view!=="archive"){clearTimeout(openingTimer);setDrawer(false);cabinetFocused=false;one("#cabinet").classList.remove("is-focused")}
+  if(view==="home"){
+   resetBlindsForHome();
+   clearTimeout(openingTimer);setDrawer(false);
+   cabinetFocused=false;one("#cabinet").classList.remove("is-focused");
+  }else if(view==="archive"){
+   openBlindsVisual();
+  }else{
+   clearTimeout(openingTimer);setDrawer(false);
+   cabinetFocused=false;one("#cabinet").classList.remove("is-focused");
+  }
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
@@ -193,7 +196,8 @@ function switchView(view,animate=true){
   window.scrollTo({top:0,behavior:"instant"});
   scheduleLensRefresh();
  };
- if(animate&&!reduced.matches){
+ const sameScene=(activeView==="home"&&view==="archive")||(activeView==="archive"&&view==="home");
+ if(animate&&!reduced.matches&&!sameScene){
   navigating=true;const screen=one("#transitionScreen");
   screen.classList.remove("leave");screen.classList.add("on");
   setTimeout(()=>{
@@ -292,98 +296,132 @@ addEventListener("resize",()=>{
  }else scheduleLensRefresh();
 });
 
-/* Real venetian blind: each horizontal slat has its own tilt.
-   Pulling either cord (pointer drag) or activating the accessible button
-   raises the slats as a compact stack before revealing the archive. */
-const SLATS=22;
+/* Physical Venetian blind: thick slats remain at the top when raised.
+   Slat inclination and the shadow bands respond to the pointer. */
+const SLATS=14;
 const slatHost=one("#venetianSlats");
 const blind=one("#venetianWindow");
+const shadowHost=one("#blindShadowLayer");
 let blindsOpened=false,blindPointerY=null,blindRAF=0,cordStartY=null,cordDrag=0,cordMoved=false;
 for(let i=0;i<SLATS;i++){
  const slat=document.createElement("span");
- slat.className="blind-slat";slat.style.setProperty("--i",i);
+ slat.className="blind-slat";
+ slat.style.setProperty("--i",i);
  slat.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
- slat.style.setProperty("--lift-delay",((SLATS-1-i)*14)+"ms");
+ slat.style.setProperty("--lift-delay",((SLATS-1-i)*26)+"ms");
  slatHost.append(slat);
+ const shadow=document.createElement("span");
+ shadow.className="blind-shadow";
+ shadow.style.setProperty("--i",i);
+ shadow.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
+ shadow.style.setProperty("--lift-delay",((SLATS-1-i)*26)+"ms");
+ shadowHost.append(shadow);
 }
-const slats=many(".blind-slat");
+const slats=many(".blind-slat"),shadows=many(".blind-shadow");
 function resetSlats(){
- [...slats,...many("#cursorReplica .blind-slat")].forEach(s=>{
+ [...slats,...shadows,...many("#cursorReplica .blind-slat")].forEach(s=>{
   for(const prop of ["--tilt","--light","--slat-open"])s.style.removeProperty(prop);
  });
 }
-const blindSurface=one("#venetianWindow");
-// Pointer events bubble from the individual slats and the text overlay.
-// Listen on the entire blind rather than only its slat container.
-blindSurface.addEventListener("pointermove",event=>{
+function updateLamelas(y){
+ const rect=slatHost.getBoundingClientRect();
+ const local=y-rect.top;
+ const radius=Math.max(140,rect.height*.21);
+ const clones=many("#cursorReplica .blind-slat");
+ slats.forEach((slat,i)=>{
+  const middle=(i+.5)*rect.height/SLATS;
+  const force=Math.pow(Math.max(0,1-Math.abs(middle-local)/radius),1.07);
+  const angle=(force*79).toFixed(1)+"deg";
+  const light=force.toFixed(2);
+  slat.style.setProperty("--tilt",angle);
+  slat.style.setProperty("--light",light);
+  slat.style.setProperty("--slat-open",light);
+  if(shadows[i]){
+   shadows[i].style.setProperty("--tilt",angle);
+   shadows[i].style.setProperty("--light",light);
+  }
+  if(clones[i]){
+   clones[i].style.setProperty("--tilt",angle);
+   clones[i].style.setProperty("--light",light);
+   clones[i].style.setProperty("--slat-open",light);
+  }
+ });
+}
+blind.addEventListener("pointermove",event=>{
  if(blindsOpened||!finePointer.matches||event.pointerType!=="mouse")return;
+ if(event.target.closest("#blindCord"))return;
  blindPointerY=event.clientY;
  if(blindRAF)return;
  blindRAF=requestAnimationFrame(()=>{
   blindRAF=0;
-  const rect=slatHost.getBoundingClientRect();
-  const local=blindPointerY-rect.top;
-  const radius=Math.max(100,rect.height*.18);
-  const cloned=many("#cursorReplica .blind-slat");
-  slats.forEach((slat,i)=>{
-   const y=(i+.5)*rect.height/SLATS;
-   const strength=Math.pow(Math.max(0,1-Math.abs(y-local)/radius),1.1);
-   const tilt=(strength*76).toFixed(1)+"deg";
-   slat.style.setProperty("--tilt",tilt);
-   slat.style.setProperty("--light",strength.toFixed(2));
-   slat.style.setProperty("--slat-open",strength.toFixed(2));
-   if(cloned[i]){
-    cloned[i].style.setProperty("--tilt",tilt);
-    cloned[i].style.setProperty("--light",strength.toFixed(2));
-    cloned[i].style.setProperty("--slat-open",strength.toFixed(2));
-   }
-  });
+  updateLamelas(blindPointerY);
  });
 },{passive:true});
-blindSurface.addEventListener("pointerleave",resetSlats);
+blind.addEventListener("pointerleave",()=>{if(!blindsOpened)resetSlats()});
 function resetBlindsForHome(){
  blindsOpened=false;
  blind.classList.remove("is-lifting");
- one("#blindCord").disabled=false;
+ const cord=one("#blindCord");
+ cord.disabled=false;
+ cord.setAttribute("aria-label","Tirar de la cuerda para subir la persiana");
  resetSlats();
+ scheduleLensRefresh();
+}
+function openBlindsVisual(){
+ blindsOpened=true;
+ blind.classList.add("is-lifting");
+ const cord=one("#blindCord");
+ cord.disabled=false;
+ cord.setAttribute("aria-label","Tirar de la cuerda para bajar la persiana");
+ resetSlats();
+ scheduleLensRefresh();
+ setTimeout(scheduleLensRefresh,1300);
 }
 function liftBlinds(){
  if(blindsOpened)return;
- blindsOpened=true;
- resetSlats();
- blind.classList.add("is-lifting");
- one("#blindCord").disabled=true;
- const delay=reduced.matches?140:1780;
- setTimeout(()=>{
-  if(activeView!=="home")return;
-  history.pushState({view:"archive"},"","#archivo");
-  switchView("archive",false);
- },delay);
+ openBlindsVisual();
+ history.pushState({view:"archive"},"","#archivo");
+ switchView("archive",false);
+}
+function lowerBlinds(){
+ if(!blindsOpened)return;
+ history.pushState({view:"home"},"","#inicio");
+ switchView("home",false);
 }
 const cord=one("#blindCord");
 cord.addEventListener("pointerdown",event=>{
- if(blindsOpened)return;
  cordStartY=event.clientY;cordDrag=0;cordMoved=false;
- cord.setPointerCapture(event.pointerId);
+ if(cord.setPointerCapture)cord.setPointerCapture(event.pointerId);
  cord.classList.add("is-dragging");
 });
 cord.addEventListener("pointermove",event=>{
- if(cordStartY===null||blindsOpened)return;
- cordDrag=Math.max(0,Math.min(130,event.clientY-cordStartY));
- cordMoved=cordMoved||cordDrag>8;
+ if(cordStartY===null)return;
+ const delta=event.clientY-cordStartY;
+ cordDrag=Math.max(0,Math.min(115,Math.abs(delta)));
+ cordMoved=cordMoved||cordDrag>9;
  cord.style.setProperty("--cord-drag",cordDrag+"px");
 });
 cord.addEventListener("pointerup",event=>{
  if(cordStartY===null)return;
- const dragged=cordDrag;
+ const distance=cordDrag;
  cordStartY=null;cord.classList.remove("is-dragging");
  cord.style.removeProperty("--cord-drag");
- if(dragged>=38)liftBlinds();
+ if(distance>=34){
+  if(blindsOpened)lowerBlinds();
+  else liftBlinds();
+ }
 });
 cord.addEventListener("pointercancel",()=>{
- cordStartY=null;cord.classList.remove("is-dragging");cord.style.removeProperty("--cord-drag");
+ cordStartY=null;cord.classList.remove("is-dragging");
+ cord.style.removeProperty("--cord-drag");
 });
-cord.addEventListener("click",()=>{if(!cordMoved)liftBlinds();cordMoved=false});
+cord.addEventListener("click",()=>{
+ if(!cordMoved){
+  if(blindsOpened)lowerBlinds();
+  else liftBlinds();
+ }
+ cordMoved=false;
+});
 
 buildFolders();
 setDrawer(false);
