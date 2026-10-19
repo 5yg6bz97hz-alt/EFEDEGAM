@@ -9,6 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="cabinet-v5.css">
+  <link rel="stylesheet" href="cabinet-v6.css">
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -45,66 +46,26 @@
       <div class="home-bottomline"><span>RECOPILADO SIN ORDEN APARENTE</span><span>DESLIZA, INVESTIGA, ABRE CAJONES ↘</span></div>
     </section>
     <section id="archiveView" class="view view-archive" hidden aria-labelledby="archiveTitle">
-      <h2 id="archiveTitle" class="visually-hidden">Archivo interactivo de proyectos</h2>
-      <div class="archive-stage archive-stage-v5">
-        <aside class="archive-margin archive-margin--left" aria-hidden="true">
-          <span class="side-heading">ARQUITECTURA<br>IDEAS<br>OBJETOS<br>PROYECTOS.</span>
-          <span class="side-symbol">+</span>
-          <span>PLANOS<br>BOCETOS<br>REFERENCIAS<br>MATERIALES<br>VIAJES<br>Y MÁS.</span>
-        </aside>
-        <div class="cabinet-scene cabinet-scene-v5">
-          <p class="scene-kicker">ARCHIVO PERSONAL / CAJÓN 02 DE 03</p>
-          <div class="cabinet" id="cabinet" aria-label="Archivador metálico con tres cajones. Pulsa un cajón para interactuar.">
-            <div class="cabinet-roof"><span class="cabinet-keyhole" aria-hidden="true"></span></div>
-            <div class="cabinet-frame">
-              <div class="drawer drawer-top" id="topDrawer">
-                <div class="recessed-handle"><span>ARCHIVE / 001</span><i></i></div>
-                <span class="sticker top-red">ARCHIVE<br>/ 001</span>
-                <span class="sticker sticker-yellow-shell"><svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#f6c800" d="M32 56C18 45 9 29 12 19c2-8 10-10 15-4 2-9 12-9 14 0 5-6 13-4 15 4 3 10-6 26-24 37Z"/><g fill="none" stroke="#153690" stroke-width="2.5" stroke-linecap="round"><path d="M32 51 17 20M32 51 25 16M32 51 32 14M32 51 40 16M32 51 48 21"/></g></svg><b>SKETCH<br>CLUB</b></span>
-                <span class="sticker sticker-mark"><img src="assets/pegatina-roja.jpg" alt="" loading="lazy"></span>
-                <span class="sticker top-pink">SECCIÓN<br>A—A<br><b>━━━━╱</b></span>
-                <span class="sticker top-paper">IDEAS<br>OBJETOS<br>PROYECTOS</span>
-                <span class="cabinet-scratches" aria-hidden="true"></span>
-                <button class="drawer-hit" type="button" data-drawer="top" aria-label="Probar cajón superior, cerrado con llave"></button>
-              </div>
-              <div class="drawer-bay" id="drawerBay">
-                <div class="bay-back" aria-hidden="true"></div>
-                <div class="drawer-tray" aria-hidden="true"><div class="tray-inner"></div><div class="tray-side tray-side--left"></div><div class="tray-side tray-side--right"></div><div class="tray-bottom"></div></div>
-                <div class="folder-stack" id="fileStack" aria-label="Carpetas de los seis proyectos"></div>
-                <div class="drawer drawer-middle-face" id="middleFace">
-                  <div class="recessed-handle"><span>PROJECTS / 002</span><i></i></div>
-                  <span class="sticker middle-black">PROYECTOS<br>/ 002</span>
-                  <span class="sticker middle-green">PLANTA<br>1:50</span>
-                  <span class="sticker middle-paper">PLANOS<br>& DETALLES</span>
-                  <span class="sticker middle-blueprint"><svg viewBox="0 0 68 70" aria-hidden="true"><rect x="7" y="5" width="55" height="59" fill="none" stroke="#292c2e" stroke-width="1.5"/><path d="M7 31h55M30 5v59M7 48h23M45 31v33M30 18h32M40 18v13" fill="none" stroke="#292c2e" stroke-width="1.5"/><path d="M31 35a10 10 0 0 1 10 10" fill="none" stroke="#292c2e" stroke-width="1"/></svg></span>
-                  <span class="sticker middle-orange">DO<br>NOT<br>FILE<br>IDEAS</span>
-                  <span class="sticker middle-scale">0 ├──┤ 1 ├────┤ 5m</span>
-                  <span class="cabinet-scratches" aria-hidden="true"></span>
-                  <button class="drawer-hit drawer-hit--middle" type="button" data-drawer="middle" aria-controls="fileStack" aria-expanded="false" aria-label="Abrir cajón central de proyectos"></button>
-                </div>
-              </div>
-              <div class="drawer drawer-bottom" id="bottomDrawer">
-                <div class="recessed-handle"><span>ETCETERA / 003</span><i></i></div>
-                <span class="sticker camino-sticker"><svg viewBox="0 0 74 72" aria-hidden="true"><path d="M38 52C20 39 13 26 16 17c3-6 9-6 13-2 4-8 13-8 17 0 6-5 12 0 12 7 0 10-7 18-20 30Z" fill="#f6d331"/><path d="M38 48 23 20M38 48 30 16M38 48V14M38 48 46 16M38 48 54 22" stroke="#123b9d" stroke-width="2.4" fill="none"/><path d="M10 61h54m-10-7 10 7-10 7" stroke="#f6d331" stroke-width="4" fill="none"/></svg><b>CAMINO<br>DE SANTIAGO</b></span>
-                <span class="sticker bottom-orange">ARCHIVE<br>No. 27</span>
-                <span class="sticker bottom-paper">CTE / DB-SI<br>URBANISMO<br>REFERENCIAS</span>
-                <span class="sticker sticker-circle-photo"><img src="assets/pegatina-sa.jpg" alt="" loading="lazy"></span>
-                <span class="sticker bottom-pink">ESCALA<br>1 / 100</span>
-                <span class="sticker bottom-samples">MATERIAL<br>SAMPLES</span>
-                <span class="cabinet-scratches" aria-hidden="true"></span>
-                <button class="drawer-hit" type="button" data-drawer="bottom" aria-label="Probar cajón inferior, cerrado con llave"></button>
-              </div>
+      <h2 id="archiveTitle" class="visually-hidden">Archivador de proyectos</h2>
+      <div class="archive-stage archive-stage-v6">
+        <div class="cabinet-scene cabinet-scene-v6">
+          <div class="cabinet cabinet-photographic" id="cabinet" aria-label="Archivador antiguo de tres cajones; el central contiene proyectos">
+            <img class="cabinet-image cabinet-image--closed" src="assets/archivador-cerrado-v6.webp" alt="" aria-hidden="true" draggable="false" width="400" height="521">
+            <img class="cabinet-image cabinet-image--open" src="assets/archivador-abierto-v6.webp" alt="" aria-hidden="true" draggable="false" width="400" height="613">
+            <div class="cabinet-closed-controls" id="cabinetClosedControls">
+              <button type="button" class="photo-hit photo-hit--top" data-drawer="top" aria-label="Cajón superior: cerrado con llave"></button>
+              <button type="button" class="photo-hit photo-hit--middle" data-drawer="middle" aria-controls="fileStack" aria-expanded="false" aria-label="Acercar y abrir el cajón central"></button>
+              <button type="button" class="photo-hit photo-hit--bottom" data-drawer="bottom" aria-label="Cajón inferior: cerrado con llave"></button>
             </div>
-            <div class="cabinet-feet" aria-hidden="true"></div>
+            <div class="cabinet-open-controls" id="cabinetOpenControls" aria-hidden="true">
+              <div id="fileStack" class="folder-stack folder-stack-photo" aria-label="Carpetas de proyectos"></div>
+              <button type="button" class="photo-hit photo-hit--middle-open" data-drawer="middle" aria-controls="fileStack" aria-expanded="false" aria-label="Cerrar el cajón central"></button>
+            </div>
           </div>
-          <p class="cabinet-instruction" id="drawerInstruction" role="status" aria-live="polite">Pulsa el archivador para acercarte y explorar sus cajones.</p>
+          <p class="cabinet-instruction" id="drawerInstruction" role="status" aria-live="polite">Pulsa el archivador para acercarte y descubrir sus cajones.</p>
         </div>
-        <aside class="archive-margin archive-margin--right" aria-hidden="true">
-          <span class="side-symbol">+</span>
-          <span>UN POCO<br>DE ARQUITECTURA.<br>UN POCO DE TODO.</span>
-        </aside>
       </div>
-      <div class="touch-files" id="touchFiles" aria-label="Carpetas accesibles desde el móvil" hidden>
+      <div class="touch-files" id="touchFiles" aria-label="Acceso alternativo a carpetas" hidden>
         <h3>Carpetas del cajón central</h3><div id="touchFileButtons"></div>
       </div>
     </section>
