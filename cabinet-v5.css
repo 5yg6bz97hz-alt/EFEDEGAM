@@ -139,3 +139,123 @@ body.is-archive .cursor-lens{filter:drop-shadow(0 1px 3px #fff7)}
  color:#252b2c;font:bold 16px/1 var(--sans);
  pointer-events:none;
 }
+
+
+/* V6: approved composition and physically projected drawer */
+#archiveView.view-archive { background:#050505 !important; overflow:hidden; min-height:calc(100svh - 140px); }
+#archiveView .archive-stage-v5{
+ grid-template-columns:minmax(0,1fr);
+ min-height:calc(100svh - 150px);
+ display:grid;place-items:center;
+ margin:0 auto;
+}
+#archiveView .archive-margin{display:none!important}
+#archiveView .cabinet-scene-v5{padding:8px 0 20px; width:100%; margin:auto; overflow:visible}
+#archiveView .scene-kicker{display:none}
+#archiveView .cabinet{
+ width:min(455px, min(48vw, 43svh));
+ max-width:90vw;
+ aspect-ratio:562/960;
+ margin:0;
+ transform:scale(.80);
+ transform-origin:center center;
+ transition:transform .95s cubic-bezier(.19,.88,.21,1),filter .95s;
+}
+#archiveView .cabinet.is-focused { transform:scale(1); }
+#archiveView .cabinet-instruction{
+ font-size:10px;
+ line-height:1.5;
+ margin:18px auto 0;
+ max-width:460px;
+ min-height:28px;
+}
+#archiveView .cabinet-frame{overflow:visible}
+#archiveView .drawer-top,#archiveView .drawer-bottom{isolation:isolate}
+#archiveView .drawer-bay{perspective:1000px;transform-style:preserve-3d}
+#archiveView .bay-back{inset:0;opacity:0;background:linear-gradient(90deg,#101315 0%,#292e2f 12%,#161819 50%,#2e3233 90%,#111415 100%);box-shadow:inset 8px 0 12px #080a0b,inset -8px 0 12px #080a0b,inset 0 10px 23px #050809}
+#archiveView .cabinet.is-open .bay-back{opacity:1}
+/* Actual drawer assembly: a visible rear interior and two tapered metal sides.
+   It moves forward together with its front, rather than opening as a falling panel. */
+#archiveView .drawer-tray{
+ z-index:6;
+ left:-11%;right:-11%;top:3%;height:185%;
+ opacity:0;
+ transform:translateY(-12%) scale(.74);
+ transform-origin:center top;
+ transition:opacity .34s, transform .96s cubic-bezier(.2,.85,.21,1);
+ filter:drop-shadow(0 17px 12px #0008);
+}
+#archiveView .cabinet.is-open .drawer-tray{opacity:1;transform:translateY(0) scale(1)}
+#archiveView .tray-inner{
+ z-index:1;left:11%;right:11%;top:4%;height:71%;
+ clip-path:polygon(9% 0%,91% 0%,100% 100%,0% 100%);
+ background:linear-gradient(180deg,#111516 0%,#363e40 10%,#656a6a 34%,#4e5657 60%,#242b2c 100%);
+ border:0;box-shadow:inset 0 18px 22px #080d0ec9;
+}
+#archiveView .tray-side{z-index:2;top:4%;height:82%;border:1px solid #32393c}
+#archiveView .tray-side--left{
+ left:0;width:23%;
+ clip-path:polygon(85% 0%,100% 0%,100% 100%,0% 100%);
+ background:linear-gradient(90deg,#2f3435 0%,#888d8b 39%,#676c6c 62%,#41484a 100%);
+ box-shadow:inset 2px 0 1px #b2b6b37a;
+}
+#archiveView .tray-side--right{
+ right:0;width:23%;
+ clip-path:polygon(0 0%,15% 0%,100% 100%,0 100%);
+ background:linear-gradient(90deg,#42484a 0%,#7e8483 58%,#32393b 100%);
+}
+#archiveView .tray-bottom{
+ z-index:3;left:0;right:0;bottom:7%;height:10%;
+ background:linear-gradient(#9ba1a0,#525b5c 58%,#32393b);
+ border:2px solid #404849;box-shadow:0 7px 8px #0009;
+}
+#archiveView .drawer-middle-face{
+ z-index:11;
+ transform:translateY(0) scale(1);
+ transform-origin:center top;
+ transition:transform .96s cubic-bezier(.2,.85,.21,1),box-shadow .96s;
+ backface-visibility:hidden;
+}
+#archiveView .cabinet.is-open .drawer-middle-face{
+ transform:translateY(97%) scale(1.23);
+ box-shadow:0 9px 0 #646b6c, 0 18px 0 #323a3c,0 29px 28px #000b;
+}
+#archiveView .folder-stack{
+ z-index:8;inset:0 9% 0;
+ transform:translateY(21%) scale(.73);
+ transform-origin:50% 5%;
+ transition:opacity .3s,transform .85s cubic-bezier(.2,.89,.25,1);
+}
+#archiveView .cabinet.is-open .folder-stack{transform:translateY(-1%) scale(1.03)}
+#archiveView .file-tab{
+ height:32%;
+ border:1px solid #6b5d41;
+ background:linear-gradient(180deg,#f4e2b6 0%,#e2c98b 55%,#d3b87c 100%);
+ box-shadow:0 4px 1px #8b7c60,0 7px 7px #0006;
+}
+#archiveView .file-tab:before{border-color:#554a3b}
+#archiveView .file-tab:nth-child(1){top:5%}
+#archiveView .file-tab:nth-child(2){top:17%}
+#archiveView .file-tab:nth-child(3){top:29%}
+#archiveView .file-tab:nth-child(4){top:41%}
+#archiveView .file-tab:nth-child(5){top:53%}
+#archiveView .file-tab:nth-child(6){top:65%}
+#archiveView .file-tab.is-shifted{transition-delay:0s}
+/* No reappearance of the former blue background within the magnifying cursor. */
+body.is-archive #siteFrame,body.is-archive #archiveView,
+body.is-archive #cursorReplica,body.is-archive #cursorReplica #siteFrame{
+ background:#050505!important;
+}
+body.is-archive #cursorReplica .site-header,
+body.is-archive #cursorReplica .site-footer{
+ background:#050505!important;color:#eee!important;
+}
+@media (max-width:760px){
+ #archiveView .archive-stage-v5{min-height:calc(100svh - 155px)}
+ #archiveView .cabinet{width:min(360px, min(82vw, 45svh));margin:0;transform:scale(.82)}
+ #archiveView .cabinet.is-focused{transform:scale(1)}
+ #archiveView .cabinet-instruction{margin-top:14px}
+}
+@media (max-height:640px) and (min-width:761px){
+ #archiveView .cabinet{width:min(330px, 40svh)}
+}
