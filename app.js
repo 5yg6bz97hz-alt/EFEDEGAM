@@ -21,8 +21,13 @@ let hero=null,voidDrawer=null,plantDrawer=null,layoutIsSmall=null,voidBusy=false
 let introTimers=[];
 let introSequenceActive=false;
 let introPlayed=false;
+let plantProgress=0,plantFrame=0,plantTargetOpen=false,plantRaster=null,plantRasterLoading=false;
 function makeUnit(index,col,row,heroCell,voidCell,plantCell){
- const id=heroCell?"023":voidCell?"099":String(index+1+(index>=22?1:0)).padStart(3,"0");
+ // Reserve 023 and 099 for the special drawers without duplicate serial numbers.
+ let serial=index+1;
+ if(serial>=23)serial++;
+ if(serial>=99)serial++;
+ const id=heroCell?"023":voidCell?"099":String(serial).padStart(3,"0");
  const unit=document.createElement("div");
  unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(plantCell?" is-plant-drawer":"");
  unit.style.gridColumn=String(col+1);
@@ -32,7 +37,10 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  if(plantCell){
   const cavity=document.createElement("div");cavity.className="plant-cavity";cavity.setAttribute("aria-hidden","true");
   const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v12.svg?v=13";sprout.alt="";sprout.className="plant-sprout";sprout.loading="eager";sprout.decoding="async";
-  unit.append(cavity,sprout);
+  const pixels=document.createElement("canvas");
+  pixels.className="plant-pixels";pixels.width=360;pixels.height=342;
+  pixels.setAttribute("aria-hidden","true");
+  unit.append(cavity,pixels,sprout);
  }
  if(heroCell){
   const cavity=document.createElement("div");cavity.className="drawer-cavity";unit.append(cavity);
@@ -57,7 +65,7 @@ function buildWall(){
  const small=innerWidth<700;
  if(layoutIsSmall===small&&hero)return;
  layoutIsSmall=small;
- const cols=small?7:11,rows=small?8:7;
+ const cols=small?9:15,rows=small?10:9;
  wall.style.setProperty("--cols",String(cols));wall.style.setProperty("--rows",String(rows));
  const centerRow=Math.floor(rows/2),centerCol=Math.floor(cols/2);
  hero=null;voidDrawer=null;plantDrawer=null;
@@ -65,14 +73,15 @@ function buildWall(){
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const i=r*cols+c;
   const isHero=r===centerRow&&c===centerCol;
-  const isVoid=r===2&&c===(small?5:9);
-  const isPlant=r===(small?5:4)&&c===1;
+  const isVoid=r===(small?3:3)&&c===(small?7:12);
+  const isPlant=r===(small?6:6)&&c===(small?2:3);
   const unit=makeUnit(i,c,r,isHero,isVoid,isPlant);
   if(isHero)hero=unit;
   if(isVoid)voidDrawer=unit;
   if(isPlant)plantDrawer=unit;
   fragment.append(unit);
  }
+ cancelPlantFrame();plantRaster=null;plantRasterLoading=false;plantProgress=0;plantTargetOpen=false;
  cells.replaceChildren(fragment);
  buildFolders();
  scheduleLensRefresh();
@@ -141,9 +150,9 @@ function jiggleLocked(unit){
 function clickDrawer(unit,isHero,isVoid,isPlant){
  if(voidBusy)return;
  if(isPlant){
-  if(introSequenceActive){cancelIntroSequence();openPlantDrawer()}
-  else if(plantDrawer&&!plantDrawer.classList.contains("is-sprouting"))openPlantDrawer();
-  else {unit.classList.remove("plant-gentle-shake");void unit.offsetWidth;unit.classList.add("plant-gentle-shake")}
+  cancelIntroSequence();
+  if(plantTargetOpen)closePlantDrawer(true);
+  else openPlantDrawer();
   return;
  }
  if(isVoid){cancelIntroSequence();enterVoid(unit);return}
@@ -223,22 +232,134 @@ function pulseDrawer(unit){
   scheduleLensRefresh();
  },reduced.matches?40:830);
 }
-function closePlantDrawer(){
+
+/* Pixelated assembly: paint a staggered, bottom-to-top mosaic of tiny blocks
+   sampled from our transparent fern artwork. No organic scaling animation. */
+function cancelPlantFrame(){
+ if(plantFrame)cancelAnimationFrame(plantFrame);
+ plantFrame=0;
+}
+function preparePlantRaster(img){
+ if(plantRaster)return true;
+ if(!img.complete||!img.naturalWidth)return false;
+ const sampling=document.createElement("canvas");
+ sampling.width=120;sampling.height=114;
+ const brush=sampling.getContext("2d",{willReadFrequently:true});
+ if(!brush)return false;
+ try {
+  brush.clearRect(0,0,120,114);
+  brush.drawImage(img,0,0,120,114);
+  const data=brush.getImageData(0,0,120,114).data;
+  const cells=[];
+  for(let y=0;y<114;y++)for(let x=0;x<120;x++){
+   const pos=(y*120+x)*4,alpha=data[pos+3];
+   if(alpha<45)continue;
+   const noise=((Math.imul(x+11,73856093)^Math.imul(y+17,19349663))>>>0)%1000/1000;
+   const threshold=Math.min(.99,(1-y/113)*.84+noise*.16);
+   cells.push({x:x*3,y:y*3,color:"rgba("+data[pos]+","+data[pos+1]+","+data[pos+2]+","+(alpha/255).toFixed(2)+")",threshold});
+  }
+  plantRaster=cells;
+  return true;
+ }catch(error){return false}
+}
+function renderPlantPixels(progress){
+ const canvas=plantDrawer?.querySelector(".plant-pixels");
+ if(!canvas||!plantRaster)return;
+ const ctx=canvas.getContext("2d");
+ if(!ctx)return;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ for(const cell of plantRaster){
+  if(cell.threshold>progress)continue;
+  ctx.fillStyle=cell.color;
+  ctx.fillRect(cell.x,cell.y,3,3);
+ }
+}
+function setPlantFullyClosed(){
  if(!plantDrawer)return;
- plantDrawer.classList.remove("is-sprouting","plant-gentle-shake","is-shaking","is-inviting");
+ plantDrawer.classList.remove("is-sprouting","is-grown","is-pixel-growing","is-pixel-closing","plant-gentle-shake","is-shaking","is-inviting");
  plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","false");
+ plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-label","Abrir el cajón de la planta");
+ plantProgress=0;renderPlantPixels(0);
+}
+function animatePlantTo(open){
+ if(!plantDrawer||!plantDrawer.isConnected)return;
+ plantTargetOpen=open;
+ cancelPlantFrame();
+ const img=plantDrawer.querySelector(".plant-sprout");
+ if(!preparePlantRaster(img)){
+  // If the image loaded but canvas sampling is unsupported, retain a usable
+  // static plant instead of leaving an empty drawer.
+  if(img?.complete&&img?.naturalWidth){
+   plantDrawer.classList.toggle("is-sprouting",open);
+   plantDrawer.classList.toggle("is-grown",open);
+   plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded",String(open));
+   if(!open)setPlantFullyClosed();
+   return;
+  }
+  if(img&&!plantRasterLoading){
+   plantRasterLoading=true;
+   const onLoad=()=>{plantRasterLoading=false;if(plantTargetOpen)animatePlantTo(true)};
+   img.addEventListener("load",onLoad,{once:true});
+   img.addEventListener("error",()=>{plantRasterLoading=false;if(plantTargetOpen){plantDrawer.classList.add("is-grown");}},{once:true});
+  }
+  if(open){
+   plantDrawer.classList.add("is-sprouting");
+   plantDrawer.classList.remove("is-grown");
+   plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","true");
+  }else setPlantFullyClosed();
+  return;
+ }
+ plantDrawer.classList.add("is-sprouting");
+ plantDrawer.classList.toggle("is-pixel-growing",open);
+ plantDrawer.classList.toggle("is-pixel-closing",!open);
+ plantDrawer.classList.remove("is-grown");
+ plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded",String(open));
+ plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-label",open?"Cerrar el cajón de la planta":"Abrir el cajón de la planta");
+ if(reduced.matches){
+  plantProgress=open?1:0;
+  renderPlantPixels(plantProgress);
+  if(open)plantDrawer.classList.add("is-grown");
+  else setPlantFullyClosed();
+  return;
+ }
+ const startProgress=plantProgress,goal=open?1:0;
+ const duration=Math.max(180,Math.abs(goal-startProgress)*(open?2700:1250));
+ const start=performance.now();
+ function tick(now){
+  if(!plantDrawer||!plantDrawer.isConnected)return;
+  const t=Math.min(1,(now-start)/duration);
+  const eased=t*t*(3-2*t);
+  plantProgress=startProgress+(goal-startProgress)*eased;
+  renderPlantPixels(plantProgress);
+  if(t<1){plantFrame=requestAnimationFrame(tick);return}
+  plantFrame=0;
+  if(open){
+   plantDrawer.classList.remove("is-pixel-growing");
+   plantDrawer.classList.add("is-grown");
+  }else setPlantFullyClosed();
+  scheduleLensRefresh();
+ }
+ plantFrame=requestAnimationFrame(tick);
+ scheduleLensRefresh();
+}
+function closePlantDrawer(animate=false){
+ plantTargetOpen=false;
+ if(!plantDrawer)return;
+ if(animate&&plantProgress>0)animatePlantTo(false);
+ else{
+  cancelPlantFrame();
+  setPlantFullyClosed();
+  scheduleLensRefresh();
+ }
 }
 function openPlantDrawer(){
  if(!plantDrawer||!plantDrawer.isConnected)return;
- plantDrawer.classList.add("is-sprouting");
- plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","true");
- scheduleLensRefresh();
- setTimeout(scheduleLensRefresh,1350);
+ animatePlantTo(true);
 }
 function resetArchiveIntro(){
  cancelIntroSequence();
  introPlayed=false;
- closePlantDrawer();
+ closePlantDrawer(false);
  hero?.classList.remove("is-shaking","is-inviting");
  voidDrawer?.classList.remove("is-shaking","is-inviting");
 }
@@ -246,7 +367,7 @@ function runArchiveIntro(){
  if(introPlayed || activeView!=="archive")return;
  introPlayed=true;
  introSequenceActive=true;
- closePlantDrawer();
+ closePlantDrawer(false);
  // Give the Venetian blind enough time to finish its 1.4s lift.
  introAfter(1550,()=>pulseDrawer(hero));
  introAfter(2700,()=>pulseDrawer(voidDrawer));
