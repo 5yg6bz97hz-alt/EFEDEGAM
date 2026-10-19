@@ -60,7 +60,7 @@ function setDrawer(isOpen){
  many("#cabinetClosedControls button").forEach(button=>button.disabled=drawerOpen);
  many("#cabinetOpenControls > button").forEach(button=>button.disabled=!drawerOpen);
  one("#drawerInstruction").textContent=drawerOpen?"Elige una carpeta; pulsa el frente central para cerrar.":"Solo el cajón central se puede abrir. Los otros dos están cerrados con llave.";
- many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale")});
+ many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale");card.style.removeProperty("--paper-tilt");card.style.removeProperty("--paper-light")});
  many("#touchFileButtons button").forEach(btn=>{btn.disabled=!drawerOpen});
  one("#touchFiles").hidden=!drawerOpen;
  scheduleLensRefresh();setTimeout(scheduleLensRefresh,780);
@@ -104,21 +104,30 @@ function sweepCards(position){
  const cards=many(".file-tab");
  cards.forEach((card,i)=>{
   const distance=Math.abs(i-position);
-  const rise=Math.max(0,1-distance);
-  const shift=rise>0 ? -42*rise : (i>position?22:0);
-  card.style.setProperty("--paper-offset",shift.toFixed(1)+"%");
-  card.style.setProperty("--paper-scale",(1+rise*.045).toFixed(3));
-  card.classList.toggle("is-under-hand",rise>.35);
-  card.classList.toggle("is-shifted",i>position);
+  const strength=Math.max(0,1-distance*.78);
+  const isForward=i>position;
+  const shift=strength>0 ? -76*strength : (isForward?27:0);
+  card.style.setProperty("--paper-offset",shift.toFixed(2)+"%");
+  card.style.setProperty("--paper-scale",(1+strength*.09).toFixed(3));
+  card.style.setProperty("--paper-tilt",(-20*strength).toFixed(1)+"deg");
+  card.style.setProperty("--paper-light",strength.toFixed(2));
+  card.classList.toggle("is-under-hand",strength>.37);
+  card.classList.toggle("is-shifted",isForward);
+ });
+ // Keep the moving lens synchronized without rebuilding the entire DOM.
+ const clones=many("#cursorReplica .file-tab");
+ if(clones.length===cards.length)cards.forEach((card,i)=>{
+  for(const prop of ["--paper-offset","--paper-scale","--paper-tilt","--paper-light"])
+   clones[i].style.setProperty(prop,card.style.getPropertyValue(prop));
  });
 }
 function fanCards(index){sweepCards(index)}
 function clearFan(){
  if(picking)return;
- many(".file-tab").forEach(card=>{
+ many(".file-tab, #cursorReplica .file-tab").forEach(card=>{
   card.classList.remove("is-shifted","is-under-hand");
-  card.style.removeProperty("--paper-offset");
-  card.style.removeProperty("--paper-scale");
+  for(const prop of ["--paper-offset","--paper-scale","--paper-tilt","--paper-light"])
+   card.style.removeProperty(prop);
  });
  scheduleLensRefresh();
 }
@@ -126,7 +135,7 @@ function pickFolder(index){
  if(!drawerOpen||picking)return;
  picking=true;
  const cards=many(".file-tab");
- cards.forEach(card=>{card.classList.remove("is-shifted","is-selected","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale")});
+ cards.forEach(card=>{card.classList.remove("is-shifted","is-selected","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale");card.style.removeProperty("--paper-tilt");card.style.removeProperty("--paper-light")});
  cards[index].classList.add("is-selected");
  setTimeout(()=>{
   picking=false;
@@ -292,26 +301,40 @@ for(let i=0;i<SLATS;i++){
 }
 const slats=many(".blind-slat");
 function resetSlats(){
- slats.forEach(s=>{s.style.removeProperty("--tilt");s.style.removeProperty("--light")});
+ [...slats,...many("#cursorReplica .blind-slat")].forEach(s=>{
+  for(const prop of ["--tilt","--light","--slat-open"])s.style.removeProperty(prop);
+ });
 }
-one("#venetianBlinds").addEventListener("pointermove",event=>{
+const blindSurface=one("#venetianWindow");
+// Pointer events bubble from the individual slats and the text overlay.
+// Listen on the entire blind rather than only its slat container.
+blindSurface.addEventListener("pointermove",event=>{
  if(blindsOpened||!finePointer.matches||event.pointerType!=="mouse")return;
+ if(event.target.closest("#blindCord")||event.target.closest("#blindKeyboardButton"))return;
  blindPointerY=event.clientY;
  if(blindRAF)return;
  blindRAF=requestAnimationFrame(()=>{
   blindRAF=0;
   const rect=slatHost.getBoundingClientRect();
   const local=blindPointerY-rect.top;
-  const radius=Math.max(75,rect.height*.13);
+  const radius=Math.max(100,rect.height*.18);
+  const cloned=many("#cursorReplica .blind-slat");
   slats.forEach((slat,i)=>{
    const y=(i+.5)*rect.height/SLATS;
-   const strength=Math.max(0,1-Math.abs(y-local)/radius);
-   slat.style.setProperty("--tilt",(strength*29).toFixed(1)+"deg");
+   const strength=Math.pow(Math.max(0,1-Math.abs(y-local)/radius),1.1);
+   const tilt=(strength*69).toFixed(1)+"deg";
+   slat.style.setProperty("--tilt",tilt);
    slat.style.setProperty("--light",strength.toFixed(2));
+   slat.style.setProperty("--slat-open",strength.toFixed(2));
+   if(cloned[i]){
+    cloned[i].style.setProperty("--tilt",tilt);
+    cloned[i].style.setProperty("--light",strength.toFixed(2));
+    cloned[i].style.setProperty("--slat-open",strength.toFixed(2));
+   }
   });
  });
 },{passive:true});
-one("#venetianBlinds").addEventListener("pointerleave",resetSlats);
+blindSurface.addEventListener("pointerleave",resetSlats);
 function resetBlindsForHome(){
  blindsOpened=false;
  blind.classList.remove("is-lifting");
