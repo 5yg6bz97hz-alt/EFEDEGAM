@@ -46,9 +46,13 @@ function setDrawer(isOpen){
  drawerOpen=Boolean(isOpen);
  const cabinet=one("#cabinet");
  cabinet.classList.toggle("is-open",drawerOpen);
- const mid=one('[data-drawer="middle"]');
- mid.setAttribute("aria-expanded",String(drawerOpen));
- mid.setAttribute("aria-label",drawerOpen?"Cerrar el cajón central":"Abrir el cajón central de proyectos");
+ many('[data-drawer="middle"]').forEach(button=>{
+  button.setAttribute("aria-expanded",String(drawerOpen));
+  button.setAttribute("aria-label",drawerOpen?"Cerrar el cajón central":"Acercar y abrir el cajón central de proyectos");
+ });
+ one("#cabinetOpenControls").setAttribute("aria-hidden",String(!drawerOpen));
+ many("#cabinetClosedControls button").forEach(button=>button.disabled=drawerOpen);
+ many("#cabinetOpenControls > button").forEach(button=>button.disabled=!drawerOpen);
  one("#drawerInstruction").textContent=drawerOpen?"Elige una carpeta; pulsa el frente central para cerrar.":"Solo el cajón central se puede abrir. Los otros dos están cerrados con llave.";
  many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted")});
  many("#touchFileButtons button").forEach(btn=>{btn.disabled=!drawerOpen});
@@ -63,13 +67,14 @@ function focusCabinet(){
  scheduleLensRefresh();setTimeout(scheduleLensRefresh,900);
 }
 function jiggleLocked(kind){
- const face=one(kind==="top"?"#topDrawer":"#bottomDrawer");
- face.classList.remove("locked-jiggle");
- void face.offsetWidth; // restart CSS animation on repeated clicks
- face.classList.add("locked-jiggle");
+ const cabinet=one("#cabinet");
+ cabinet.classList.remove("locked-top","locked-bottom");
+ void cabinet.offsetWidth;
+ const cls=kind==="top"?"locked-top":"locked-bottom";
+ cabinet.classList.add(cls);
  one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Prueba el del medio.";
  clearTimeout(lockedTimer);
- lockedTimer=setTimeout(()=>face.classList.remove("locked-jiggle"),500);
+ lockedTimer=setTimeout(()=>cabinet.classList.remove(cls),500);
  scheduleLensRefresh();
 }
 function clickDrawer(kind){
@@ -104,7 +109,11 @@ function pickFolder(index){
  const cards=many(".file-tab");
  cards.forEach(card=>card.classList.remove("is-shifted","is-selected"));
  cards[index].classList.add("is-selected");
- setTimeout(()=>{picking=false;openProject(index)},reduced.matches?0:390);
+ setTimeout(()=>{
+  picking=false;
+  if(!drawerOpen||activeView!=="archive")return;
+  openProject(index);
+ },reduced.matches?0:320);
 }
 function openProject(index){
  selectedProject=index;
@@ -200,7 +209,9 @@ function createLensReplica(){
  clone.inert=true;
  clone.style.width=innerWidth+"px";
  clone.style.minHeight=source.scrollHeight+"px";
- clone.querySelectorAll("[id]").forEach(element=>element.removeAttribute("id"));
+ // The duplicate is inert and hidden from assistive technology. Keep the
+ // original IDs so the approved cabinet stylesheet also styles the lens copy.
+ clone.querySelectorAll("a,button").forEach(element=>{element.tabIndex=-1});
  container.replaceChildren(clone);
  positionLens();
 }
