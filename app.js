@@ -23,25 +23,15 @@ let introSequenceActive=false;
 let introPlayed=false;
 function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  const id=heroCell?"023":voidCell?"099":String(index+1+(index>=22?1:0)).padStart(3,"0");
- const ajar=false;
- const paper=false; // No papers protrude anywhere in the new minimalist archive.
  const unit=document.createElement("div");
  unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(plantCell?" is-plant-drawer":"");
  unit.style.gridColumn=String(col+1);
  unit.style.gridRow=String(row+1);
  unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":plantCell?"plant":"locked";
  unit.dataset.number=id;
- if(paper){
-  const slip=document.createElement("span");slip.className="paper-slip";
-  slip.setAttribute("aria-hidden","true");unit.append(slip);
-  if(index===24||index===69){
-   const slip2=document.createElement("span");slip2.className="paper-slip paper-slip--two";
-   slip2.setAttribute("aria-hidden","true");unit.append(slip2);
-  }
- }
  if(plantCell){
   const cavity=document.createElement("div");cavity.className="plant-cavity";cavity.setAttribute("aria-hidden","true");
-  const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v12.svg";sprout.alt="";sprout.className="plant-sprout";sprout.loading="lazy";sprout.decoding="async";
+  const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v12.svg?v=13";sprout.alt="";sprout.className="plant-sprout";sprout.loading="eager";sprout.decoding="async";
   unit.append(cavity,sprout);
  }
  if(heroCell){
@@ -58,6 +48,7 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  button.type="button";button.className="drawer-click";
  button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":plantCell?"Cajón botánico; una planta brota en su interior":"Cajón "+id+" cerrado con llave");
  if(heroCell){button.setAttribute("aria-controls","fileStack");button.setAttribute("aria-expanded","false")}
+ if(plantCell)button.setAttribute("aria-expanded","false");
  button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell,plantCell));
  front.append(button);unit.append(front);
  return unit;
@@ -223,14 +214,18 @@ function introAfter(delay,action){
 }
 function pulseDrawer(unit){
  if(!unit||!unit.isConnected)return;
- unit.classList.remove("is-shaking");
+ unit.classList.remove("is-shaking","is-inviting");
  void unit.offsetWidth;
- unit.classList.add("is-shaking");
- setTimeout(()=>unit.classList.remove("is-shaking"),650);
+ unit.classList.add("is-inviting");
+ scheduleLensRefresh();
+ setTimeout(()=>{
+  unit.classList.remove("is-inviting");
+  scheduleLensRefresh();
+ },reduced.matches?40:830);
 }
 function closePlantDrawer(){
  if(!plantDrawer)return;
- plantDrawer.classList.remove("is-sprouting","plant-gentle-shake","is-shaking");
+ plantDrawer.classList.remove("is-sprouting","plant-gentle-shake","is-shaking","is-inviting");
  plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","false");
 }
 function openPlantDrawer(){
@@ -244,20 +239,20 @@ function resetArchiveIntro(){
  cancelIntroSequence();
  introPlayed=false;
  closePlantDrawer();
- hero?.classList.remove("is-shaking");
- voidDrawer?.classList.remove("is-shaking");
+ hero?.classList.remove("is-shaking","is-inviting");
+ voidDrawer?.classList.remove("is-shaking","is-inviting");
 }
 function runArchiveIntro(){
  if(introPlayed || activeView!=="archive")return;
  introPlayed=true;
  introSequenceActive=true;
  closePlantDrawer();
- // The first motion occurs one second after the blinds have gone up.
- introAfter(1000,()=>pulseDrawer(hero));
- introAfter(2050,()=>pulseDrawer(voidDrawer));
- introAfter(3100,()=>pulseDrawer(plantDrawer));
- introAfter(3820,()=>openPlantDrawer());
- introAfter(4800,()=>{introSequenceActive=false;scheduleLensRefresh()});
+ // Give the Venetian blind enough time to finish its 1.4s lift.
+ introAfter(1550,()=>pulseDrawer(hero));
+ introAfter(2700,()=>pulseDrawer(voidDrawer));
+ introAfter(3850,()=>pulseDrawer(plantDrawer));
+ introAfter(4850,()=>openPlantDrawer());
+ introAfter(6250,()=>{introSequenceActive=false;scheduleLensRefresh()});
 }
 function sweepCards(position){
  if(!drawerOpen||picking)return;
