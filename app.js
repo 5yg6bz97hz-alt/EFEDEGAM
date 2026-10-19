@@ -1,12 +1,12 @@
 "use strict";
 // EFEDEGAM v10 — wall-sized archival cabinet with single physical drawer.
 const projects=[
- {title:"Espacios imaginados",category:"Arquitectura",color:"#f6e474",word:"ESPACIOS",description:"Aquí irán proyectos de arquitectura, renders, planos y procesos de diseño."},
- {title:"Cortar y pegar",category:"Fotomontajes",color:"#efabbd",word:"COLLAGES",description:"Composiciones, recortes, fotomontajes y nuevas maneras de mirar."},
- {title:"De mi cuaderno",category:"Dibujos",color:"#c6dbaa",word:"TRAZOS",description:"Dibujos, croquis e ideas que todavía no tienen forma."},
- {title:"Dentro del estudio",category:"Arquitectura profesional",color:"#b3c8ea",word:"ESTUDIO",description:"Una selección de trabajos profesionales, cuando esté autorizada su publicación."},
- {title:"Cosas que se tocan",category:"Objetos",color:"#ef9a7b",word:"OBJETOS",description:"Diseños, prototipos, impresiones 3D y experimentos materiales."},
- {title:"Sin clasificar",category:"Experimentos",color:"#e0c9e5",word:"ETC.",description:"Para todo aquello que se resiste a encajar en una categoría."}
+ {title:"Espacios imaginados",category:"Arquitectura",color:"#8D075A",word:"ESPACIOS",description:"Aquí irán proyectos de arquitectura, renders, planos y procesos de diseño."},
+ {title:"Cortar y pegar",category:"Fotomontajes",color:"#F15C27",word:"COLLAGES",description:"Composiciones, recortes, fotomontajes y nuevas maneras de mirar."},
+ {title:"De mi cuaderno",category:"Dibujos",color:"#078B76",word:"TRAZOS",description:"Dibujos, croquis e ideas que todavía no tienen forma."},
+ {title:"Dentro del estudio",category:"Arquitectura profesional",color:"#ED2835",word:"ESTUDIO",description:"Una selección de trabajos profesionales, cuando esté autorizada su publicación."},
+ {title:"Cosas que se tocan",category:"Objetos",color:"#2852E5",word:"OBJETOS",description:"Diseños, prototipos, impresiones 3D y experimentos materiales."},
+ {title:"Sin clasificar",category:"Experimentos",color:"#C43C99",word:"ETC.",description:"Para todo aquello que se resiste a encajar en una categoría."}
 ];
 const one=selector=>document.querySelector(selector);
 const many=selector=>Array.from(document.querySelectorAll(selector));
@@ -17,16 +17,19 @@ let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFoc
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
 let cabinetFocused=false,openingTimer=null,lockedTimer=null;
 const wall=one("#cabinet"),cells=one("#cabinetCells");
-let hero=null,voidDrawer=null,layoutIsSmall=null,voidBusy=false,voidTimer=null;
-function makeUnit(index,col,row,heroCell,voidCell){
+let hero=null,voidDrawer=null,plantDrawer=null,layoutIsSmall=null,voidBusy=false,voidTimer=null;
+let introTimers=[];
+let introSequenceActive=false;
+let introPlayed=false;
+function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  const id=heroCell?"023":voidCell?"099":String(index+1+(index>=22?1:0)).padStart(3,"0");
- const ajar=[3,9,16,24,30,46,52,61,69].includes(index) && !heroCell && !voidCell;
- const paper=[3,16,24,30,52,69].includes(index) && !heroCell && !voidCell;
+ const ajar=false;
+ const paper=false; // No papers protrude anywhere in the new minimalist archive.
  const unit=document.createElement("div");
- unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(ajar?" is-ajar":"");
+ unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(plantCell?" is-plant-drawer":"");
  unit.style.gridColumn=String(col+1);
  unit.style.gridRow=String(row+1);
- unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":"locked";
+ unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":plantCell?"plant":"locked";
  unit.dataset.number=id;
  if(paper){
   const slip=document.createElement("span");slip.className="paper-slip";
@@ -35,6 +38,11 @@ function makeUnit(index,col,row,heroCell,voidCell){
    const slip2=document.createElement("span");slip2.className="paper-slip paper-slip--two";
    slip2.setAttribute("aria-hidden","true");unit.append(slip2);
   }
+ }
+ if(plantCell){
+  const cavity=document.createElement("div");cavity.className="plant-cavity";cavity.setAttribute("aria-hidden","true");
+  const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v12.svg";sprout.alt="";sprout.className="plant-sprout";sprout.loading="lazy";sprout.decoding="async";
+  unit.append(cavity,sprout);
  }
  if(heroCell){
   const cavity=document.createElement("div");cavity.className="drawer-cavity";unit.append(cavity);
@@ -48,9 +56,9 @@ function makeUnit(index,col,row,heroCell,voidCell){
  front.innerHTML='<span class="drawer-card-label">'+(heroCell?"PROYECTOS":voidCell?"ARCHIVO ESPECIAL":("F. "+id))+'</span><span class="drawer-handle"></span><span class="drawer-id">'+id+'</span>'+(voidCell?'<span class="drawer-void-sticker">EL VACÍO</span>':'');
  const button=document.createElement("button");
  button.type="button";button.className="drawer-click";
- button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":"Cajón "+id+" cerrado con llave");
+ button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":plantCell?"Cajón botánico; una planta brota en su interior":"Cajón "+id+" cerrado con llave");
  if(heroCell){button.setAttribute("aria-controls","fileStack");button.setAttribute("aria-expanded","false")}
- button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell));
+ button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell,plantCell));
  front.append(button);unit.append(front);
  return unit;
 }
@@ -61,15 +69,17 @@ function buildWall(){
  const cols=small?7:11,rows=small?8:7;
  wall.style.setProperty("--cols",String(cols));wall.style.setProperty("--rows",String(rows));
  const centerRow=Math.floor(rows/2),centerCol=Math.floor(cols/2);
- hero=null;voidDrawer=null;
+ hero=null;voidDrawer=null;plantDrawer=null;
  const fragment=document.createDocumentFragment();
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const i=r*cols+c;
   const isHero=r===centerRow&&c===centerCol;
-  const isVoid=r===(small?2:2)&&c===(small?5:9);
-  const unit=makeUnit(i,c,r,isHero,isVoid);
+  const isVoid=r===2&&c===(small?5:9);
+  const isPlant=r===(small?5:4)&&c===1;
+  const unit=makeUnit(i,c,r,isHero,isVoid,isPlant);
   if(isHero)hero=unit;
   if(isVoid)voidDrawer=unit;
+  if(isPlant)plantDrawer=unit;
   fragment.append(unit);
  }
  cells.replaceChildren(fragment);
@@ -84,6 +94,7 @@ function buildFolders(){
   const card=document.createElement("button");card.type="button";card.className="file-tab";
   card.style.setProperty("--index",index);
   card.style.setProperty("--tab-color",project.color);
+  card.style.setProperty("--folder-color",project.color);
   card.style.setProperty("--tab-left",["7%","33%","58%","16%","50%","65%"][index]);
   card.innerHTML='<span class="file-number">'+label+'</span><span class="file-name">'+project.title+'</span><span class="file-arrow">↗</span>';
   card.setAttribute("aria-label","Abrir carpeta "+label+": "+project.title);
@@ -136,10 +147,17 @@ function jiggleLocked(unit){
  clearTimeout(lockedTimer);
  lockedTimer=setTimeout(()=>unit.classList.remove("is-shaking"),500);
 }
-function clickDrawer(unit,isHero,isVoid){
+function clickDrawer(unit,isHero,isVoid,isPlant){
  if(voidBusy)return;
- if(isVoid){enterVoid(unit);return}
+ if(isPlant){
+  if(introSequenceActive){cancelIntroSequence();openPlantDrawer()}
+  else if(plantDrawer&&!plantDrawer.classList.contains("is-sprouting"))openPlantDrawer();
+  else {unit.classList.remove("plant-gentle-shake");void unit.offsetWidth;unit.classList.add("plant-gentle-shake")}
+  return;
+ }
+ if(isVoid){cancelIntroSequence();enterVoid(unit);return}
  if(!isHero){jiggleLocked(unit);return}
+ cancelIntroSequence();
  if(drawerOpen){
   setDrawer(false);
   clearTimeout(openingTimer);
@@ -190,6 +208,56 @@ function enterVoid(unit){
    scheduleLensRefresh();
   },reduced.matches?10:580);
  },duration);
+}
+/* After the blinds rise, all drawers remain shut. Only three invitation
+   motions follow: 023, 099 and the botanical drawer, then one fern sprouts. */
+function cancelIntroSequence(){
+ introTimers.forEach(clearTimeout);
+ introTimers=[];
+ introSequenceActive=false;
+}
+function introAfter(delay,action){
+ introTimers.push(setTimeout(()=>{
+  if(activeView==="archive"&&introSequenceActive&&!voidBusy)action();
+ },reduced.matches?0:delay));
+}
+function pulseDrawer(unit){
+ if(!unit||!unit.isConnected)return;
+ unit.classList.remove("is-shaking");
+ void unit.offsetWidth;
+ unit.classList.add("is-shaking");
+ setTimeout(()=>unit.classList.remove("is-shaking"),650);
+}
+function closePlantDrawer(){
+ if(!plantDrawer)return;
+ plantDrawer.classList.remove("is-sprouting","plant-gentle-shake","is-shaking");
+ plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","false");
+}
+function openPlantDrawer(){
+ if(!plantDrawer||!plantDrawer.isConnected)return;
+ plantDrawer.classList.add("is-sprouting");
+ plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","true");
+ scheduleLensRefresh();
+ setTimeout(scheduleLensRefresh,1350);
+}
+function resetArchiveIntro(){
+ cancelIntroSequence();
+ introPlayed=false;
+ closePlantDrawer();
+ hero?.classList.remove("is-shaking");
+ voidDrawer?.classList.remove("is-shaking");
+}
+function runArchiveIntro(){
+ if(introPlayed || activeView!=="archive")return;
+ introPlayed=true;
+ introSequenceActive=true;
+ closePlantDrawer();
+ // The first motion occurs one second after the blinds have gone up.
+ introAfter(1000,()=>pulseDrawer(hero));
+ introAfter(2050,()=>pulseDrawer(voidDrawer));
+ introAfter(3100,()=>pulseDrawer(plantDrawer));
+ introAfter(3820,()=>openPlantDrawer());
+ introAfter(4800,()=>{introSequenceActive=false;scheduleLensRefresh()});
 }
 function sweepCards(position){
  if(!drawerOpen||picking)return;
@@ -260,9 +328,9 @@ function switchView(view,animate=true){
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
   document.body.classList.toggle("is-void",view==="vacio");
-  if(view==="home"){resetBlindsForHome();resetCabinet()}
-  else if(view==="archive")openBlindsVisual();
-  else resetCabinet();
+  if(view==="home"){resetBlindsForHome();resetCabinet();resetArchiveIntro()}
+  else if(view==="archive"){openBlindsVisual();runArchiveIntro()}
+  else {resetCabinet();cancelIntroSequence()}
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
