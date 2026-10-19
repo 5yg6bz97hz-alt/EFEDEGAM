@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="detective-entry.css">
   <link rel="stylesheet" href="venetian-v8.css">
   <link rel="stylesheet" href="venetian-v9.css">
+  <link rel="stylesheet" href="archive-wall-v10.css">
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -29,38 +30,17 @@
     <section id="homeView" class="view view-home home-detective" aria-labelledby="homeTitle">
   <h1 class="visually-hidden" id="homeTitle">EFEDEGAM — Archivo personal</h1>
   <div class="detective-entry" id="detectiveEntry">
-    <div id="archiveView" class="view-archive" role="region" aria-labelledby="archiveTitle">
-      <h2 id="archiveTitle" class="visually-hidden">Archivador de proyectos</h2>
+    <div id="archiveView" class="view-archive archive-wall-view" role="region" aria-labelledby="archiveTitle">
+      <h2 id="archiveTitle" class="visually-hidden">Archivo de proyectos. Pared de cajones metálicos.</h2>
       <div class="archive-stage archive-stage-v6">
-        <div class="detective-set" aria-hidden="true">
-  <div class="room-wall"></div><div class="room-floor"></div><div class="room-light room-light--left"></div><div class="room-light room-light--right"></div>
-  <div class="detective-lamp detective-lamp--left"><i></i></div><div class="detective-lamp detective-lamp--right"><i></i></div>
-  <div class="detective-shelves"><span></span><span></span><span></span></div>
-  <div class="detective-board"><b>ARCH. / 01</b><span>✳</span><i></i></div>
-  <div class="detective-desk"><div class="desk-files"></div><div class="desk-books"></div></div>
-  <div class="detective-boxes"><span></span><span></span></div>
-</div>
-        <div class="cabinet-scene cabinet-scene-v6">
-          <div class="cabinet cabinet-photographic" id="cabinet" aria-label="Archivador antiguo de tres cajones; el central contiene proyectos">
-            <img class="cabinet-image cabinet-image--closed" src="assets/archivador-cerrado-v6.webp" alt="" aria-hidden="true" draggable="false" width="400" height="521">
-            <img class="cabinet-image cabinet-image--open" src="assets/archivador-abierto-v6.webp" alt="" aria-hidden="true" draggable="false" width="400" height="613">
-            <div class="cabinet-closed-controls" id="cabinetClosedControls">
-              <button type="button" class="photo-hit photo-hit--top" data-drawer="top" aria-label="Cajón superior: cerrado con llave"></button>
-              <button type="button" class="photo-hit photo-hit--middle" data-drawer="middle" aria-controls="fileStack" aria-expanded="false" aria-label="Acercar y abrir el cajón central"></button>
-              <button type="button" class="photo-hit photo-hit--bottom" data-drawer="bottom" aria-label="Cajón inferior: cerrado con llave"></button>
-            </div>
-            <div class="cabinet-open-controls" id="cabinetOpenControls" aria-hidden="true">
-              <button type="button" class="photo-hit photo-hit--top-open" data-drawer="top" aria-label="Cajón superior: cerrado con llave"></button>
-              <div id="fileStack" class="folder-stack folder-stack-photo" aria-label="Carpetas de proyectos"></div>
-              <button type="button" class="photo-hit photo-hit--middle-open" data-drawer="middle" aria-controls="fileStack" aria-expanded="false" aria-label="Cerrar el cajón central"></button>
-              <button type="button" class="photo-hit photo-hit--bottom-open" data-drawer="bottom" aria-label="Cajón inferior: cerrado con llave"></button>
-            </div>
-          </div>
-          <p class="cabinet-instruction" id="drawerInstruction" role="status" aria-live="polite">Pulsa el archivador para acercarte y descubrir sus cajones.</p>
+        <div class="archive-wall" id="cabinet" aria-label="Gran pared de archivadores envejecidos. El cajón central contiene los proyectos.">
+          <div class="archive-drawers" id="cabinetCells"></div>
         </div>
+        <div class="archive-atmosphere" aria-hidden="true"></div>
+        <p id="drawerInstruction" class="visually-hidden" role="status" aria-live="polite">Selecciona el cajón iluminado del centro para acercarte a los proyectos.</p>
       </div>
-      <div class="touch-files" id="touchFiles" aria-label="Acceso alternativo a carpetas" hidden>
-        <h3>Carpetas del cajón central</h3><div id="touchFileButtons"></div>
+      <div class="touch-files" id="touchFiles" aria-label="Acceso táctil a carpetas" hidden>
+        <h3>Carpetas de proyectos</h3><div id="touchFileButtons"></div>
       </div>
     </div>
     <div class="venetian-window" id="venetianWindow">

@@ -1,5 +1,5 @@
 "use strict";
-// EFEDEGAM / archivo personal. Los proyectos siguen siendo ejemplos editables.
+// EFEDEGAM v10 — wall-sized archival cabinet with single physical drawer.
 const projects=[
  {title:"Espacios imaginados",category:"Arquitectura",color:"#f6e474",word:"ESPACIOS",description:"Aquí irán proyectos de arquitectura, renders, planos y procesos de diseño."},
  {title:"Cortar y pegar",category:"Fotomontajes",color:"#efabbd",word:"COLLAGES",description:"Composiciones, recortes, fotomontajes y nuevas maneras de mirar."},
@@ -15,186 +15,212 @@ const finePointer=matchMedia("(pointer:fine)");
 const views={home:one("#homeView"),archive:one("#homeView"),about:one("#aboutView")};
 let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFocus=null,navigating=false;
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
+let cabinetFocused=false,openingTimer=null,lockedTimer=null;
+const wall=one("#cabinet"),cells=one("#cabinetCells");
+let hero=null,layoutIsSmall=null;
+function makeUnit(index,col,row,heroCell){
+ const id=String(index+1).padStart(3,"0");
+ const ajar=[3,9,16,24,30,46,52,61,69].includes(index) && !heroCell;
+ const paper=[3,16,24,30,52,69].includes(index) && !heroCell;
+ const unit=document.createElement("div");
+ unit.className="drawer-unit"+(heroCell?" is-hero":"")+(ajar?" is-ajar":"");
+ unit.style.gridColumn=String(col+1);
+ unit.style.gridRow=String(row+1);
+ unit.dataset.drawer=heroCell?"middle":"locked";
+ unit.dataset.number=id;
+ if(paper){
+  const slip=document.createElement("span");slip.className="paper-slip";
+  slip.setAttribute("aria-hidden","true");unit.append(slip);
+  if(index===24||index===69){
+   const slip2=document.createElement("span");slip2.className="paper-slip paper-slip--two";
+   slip2.setAttribute("aria-hidden","true");unit.append(slip2);
+  }
+ }
+ if(heroCell){
+  const cavity=document.createElement("div");cavity.className="drawer-cavity";unit.append(cavity);
+  const tray=document.createElement("div");
+  tray.className="drawer-assembly";
+  tray.innerHTML='<div class="drawer-tray-floor"></div><div class="drawer-tray-side drawer-tray-side--left"></div><div class="drawer-tray-side drawer-tray-side--right"></div><div class="drawer-tray-rim"></div>';
+  unit.append(tray);
+  const files=document.createElement("div");files.className="file-tray-files";files.id="fileStack";files.setAttribute("aria-label","Carpetas del cajón de proyectos");unit.append(files);
+ }
+ const front=document.createElement("div");front.className="drawer-face";
+ front.innerHTML='<span class="drawer-card-label">'+(heroCell?"PROYECTOS":("F. "+id))+'</span><span class="drawer-handle"></span><span class="drawer-id">'+id+'</span>';
+ const button=document.createElement("button");
+ button.type="button";button.className="drawer-click";
+ button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón central de proyectos":"Cajón "+id+" cerrado con llave");
+ if(heroCell){button.setAttribute("aria-controls","fileStack");button.setAttribute("aria-expanded","false")}
+ button.addEventListener("click",()=>clickDrawer(unit,heroCell));
+ front.append(button);unit.append(front);
+ return unit;
+}
+function buildWall(){
+ const small=innerWidth<700;
+ if(layoutIsSmall===small&&hero)return;
+ layoutIsSmall=small;
+ const cols=small?7:11,rows=small?8:7;
+ wall.style.setProperty("--cols",String(cols));wall.style.setProperty("--rows",String(rows));
+ const centerRow=Math.floor(rows/2),centerCol=Math.floor(cols/2);
+ const fragment=document.createDocumentFragment();
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const i=r*cols+c;
+  const isHero=r===centerRow&&c===centerCol;
+  const unit=makeUnit(i,c,r,isHero);
+  if(isHero)hero=unit;
+  fragment.append(unit);
+ }
+ cells.replaceChildren(fragment);
+ buildFolders();
+ scheduleLensRefresh();
+}
 function buildFolders(){
  const holder=one("#fileStack"),touch=one("#touchFileButtons");
+ holder.replaceChildren();touch.replaceChildren();
  projects.forEach((project,index)=>{
   const label=String(index+1).padStart(2,"0");
-  const card=document.createElement("button");
-  card.type="button";card.className="file-tab";
+  const card=document.createElement("button");card.type="button";card.className="file-tab";
   card.style.setProperty("--index",index);
   card.style.setProperty("--tab-color",project.color);
-  card.style.setProperty("--tab-left",["8%","24%","53%","12%","40%","62%"][index]);
+  card.style.setProperty("--tab-left",["7%","33%","58%","16%","50%","65%"][index]);
   card.innerHTML='<span class="file-number">'+label+'</span><span class="file-name">'+project.title+'</span><span class="file-arrow">↗</span>';
   card.setAttribute("aria-label","Abrir carpeta "+label+": "+project.title);
   card.addEventListener("mouseenter",()=>fanCards(index));
   card.addEventListener("focus",()=>fanCards(index));
-  card.addEventListener("click",()=>pickFolder(index));
+  card.addEventListener("click",event=>{event.stopPropagation();pickFolder(index)});
   holder.append(card);
-  const shortcut=document.createElement("button");
-  shortcut.type="button";shortcut.textContent=label+" · "+project.title;
-  shortcut.setAttribute("aria-label","Abrir "+project.title);
+  const shortcut=document.createElement("button");shortcut.type="button";
+  shortcut.textContent=label+" · "+project.title;
   shortcut.addEventListener("click",()=>pickFolder(index));
   touch.append(shortcut);
  });
  holder.addEventListener("pointermove",event=>{
   if(!drawerOpen||picking||event.pointerType!=="mouse")return;
   const rect=holder.getBoundingClientRect();
-  const pos=Math.max(0,Math.min(projects.length-1,((event.clientY-rect.top)/Math.max(1,rect.height))*(projects.length-1)));
+  const pos=Math.max(0,Math.min(5,((event.clientY-rect.top)/Math.max(1,rect.height))*5));
   sweepCards(pos);
  });
- holder.addEventListener("mouseleave",clearFan);
+ holder.addEventListener("pointerleave",clearFan);
  holder.addEventListener("focusout",event=>{if(!holder.contains(event.relatedTarget))clearFan()});
 }
-let cabinetFocused=false;
-let openingTimer=null;
-let lockedTimer=null;
-function setDrawer(isOpen){
- drawerOpen=Boolean(isOpen);
- const cabinet=one("#cabinet");
- cabinet.classList.toggle("is-open",drawerOpen);
- many('[data-drawer="middle"]').forEach(button=>{
-  button.setAttribute("aria-expanded",String(drawerOpen));
-  button.setAttribute("aria-label",drawerOpen?"Cerrar el cajón central":"Acercar y abrir el cajón central de proyectos");
- });
- one("#cabinetOpenControls").setAttribute("aria-hidden",String(!drawerOpen));
- many("#cabinetClosedControls button").forEach(button=>button.disabled=drawerOpen);
- many("#cabinetOpenControls > button").forEach(button=>button.disabled=!drawerOpen);
- one("#drawerInstruction").textContent=drawerOpen?"Elige una carpeta; pulsa el frente central para cerrar.":"Solo el cajón central se puede abrir. Los otros dos están cerrados con llave.";
- many(".file-tab").forEach(card=>{card.disabled=!drawerOpen;card.classList.remove("is-selected","is-shifted","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale");card.style.removeProperty("--paper-tilt");card.style.removeProperty("--paper-light")});
- many("#touchFileButtons button").forEach(btn=>{btn.disabled=!drawerOpen});
+function setDrawer(open){
+ drawerOpen=Boolean(open);
+ if(!hero)return;
+ hero.classList.toggle("is-open",drawerOpen);
+ const btn=hero.querySelector(".drawer-click");
+ btn.setAttribute("aria-expanded",String(drawerOpen));
+ btn.setAttribute("aria-label",drawerOpen?"Cerrar y alejar el cajón de proyectos":"Acercar y abrir el cajón central de proyectos");
+ many("#fileStack .file-tab, #touchFileButtons button").forEach(button=>button.disabled=!drawerOpen);
  one("#touchFiles").hidden=!drawerOpen;
- scheduleLensRefresh();setTimeout(scheduleLensRefresh,780);
+ if(!drawerOpen)clearFan();
+ one("#drawerInstruction").textContent=drawerOpen?"Selecciona una carpeta. Pulsa el frontal para cerrar.":"Pulsa el cajón de PROYECTOS para acercarte.";
+ scheduleLensRefresh();setTimeout(scheduleLensRefresh,1100);
 }
 function focusCabinet(){
  if(cabinetFocused)return;
- cabinetFocused=true;
- one("#cabinet").classList.add("is-focused");
- one("#drawerInstruction").textContent="Ahora puedes probar los tres cajones. Solo se abre el central.";
- scheduleLensRefresh();setTimeout(scheduleLensRefresh,900);
+ cabinetFocused=true;wall.classList.add("is-zoomed");
+ scheduleLensRefresh();setTimeout(scheduleLensRefresh,1350);
 }
-function jiggleLocked(kind){
- const cabinet=one("#cabinet");
- cabinet.classList.remove("locked-top","locked-bottom");
- void cabinet.offsetWidth;
- const cls=kind==="top"?"locked-top":"locked-bottom";
- cabinet.classList.add(cls);
- one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Prueba el del medio.";
- clearTimeout(lockedTimer);
- lockedTimer=setTimeout(()=>cabinet.classList.remove(cls),500);
+function resetCabinet(){
+ clearTimeout(openingTimer);
+ setDrawer(false);cabinetFocused=false;wall.classList.remove("is-zoomed");
  scheduleLensRefresh();
 }
-function clickDrawer(kind){
- if(!cabinetFocused){
-  focusCabinet();
+function jiggleLocked(unit){
+ unit.classList.remove("is-shaking");void unit.offsetWidth;
+ unit.classList.add("is-shaking");
+ one("#drawerInstruction").textContent="Ese cajón está cerrado con llave. Busca PROYECTOS.";
+ clearTimeout(lockedTimer);
+ lockedTimer=setTimeout(()=>unit.classList.remove("is-shaking"),500);
+}
+function clickDrawer(unit,isHero){
+ if(!isHero){jiggleLocked(unit);return}
+ if(drawerOpen){
+  setDrawer(false);
   clearTimeout(openingTimer);
   openingTimer=setTimeout(()=>{
-   if(activeView!=="archive")return;
-   if(kind==="middle")setDrawer(true);
-   else jiggleLocked(kind);
-  },reduced.matches?0:730);
- }else if(kind==="middle"){
-  clearTimeout(openingTimer);
-  setDrawer(!drawerOpen);
- }else{
-  jiggleLocked(kind);
+   cabinetFocused=false;wall.classList.remove("is-zoomed");scheduleLensRefresh();
+  },reduced.matches?0:600);
+  return;
  }
+ if(!cabinetFocused){
+  focusCabinet();clearTimeout(openingTimer);
+  openingTimer=setTimeout(()=>setDrawer(true),reduced.matches?0:1180);
+ }else setDrawer(true);
 }
 function sweepCards(position){
- if(!drawerOpen||picking||!finePointer.matches)return;
- const cards=many(".file-tab");
+ if(!drawerOpen||picking)return;
+ const cards=many("#fileStack .file-tab");
+ const clones=many("#cursorReplica .file-tab");
  cards.forEach((card,i)=>{
   const distance=Math.abs(i-position);
-  const strength=Math.max(0,1-distance*.78);
-  const isForward=i>position;
-  const shift=strength>0 ? -76*strength : (isForward?27:0);
-  card.style.setProperty("--paper-offset",shift.toFixed(2)+"%");
-  card.style.setProperty("--paper-scale",(1+strength*.09).toFixed(3));
-  card.style.setProperty("--paper-tilt",(-20*strength).toFixed(1)+"deg");
-  card.style.setProperty("--paper-light",strength.toFixed(2));
-  card.classList.toggle("is-under-hand",strength>.37);
-  card.classList.toggle("is-shifted",isForward);
- });
- // Keep the moving lens synchronized without rebuilding the entire DOM.
- const clones=many("#cursorReplica .file-tab");
- if(clones.length===cards.length)cards.forEach((card,i)=>{
-  for(const prop of ["--paper-offset","--paper-scale","--paper-tilt","--paper-light"])
-   clones[i].style.setProperty(prop,card.style.getPropertyValue(prop));
+  const proximity=Math.max(0,1-distance*.75);
+  const offset=proximity>0 ? -67*proximity:(i>position?16:0);
+  const scale=1+proximity*.065;
+  const tilt=-15*proximity;
+  for(const node of [card,clones[i]].filter(Boolean)){
+   node.style.setProperty("--paper-offset",offset.toFixed(1)+"%");
+   node.style.setProperty("--paper-scale",scale.toFixed(3));
+   node.style.setProperty("--paper-tilt",tilt.toFixed(1)+"deg");
+   node.style.setProperty("--paper-light",proximity.toFixed(2));
+   node.classList.toggle("is-under-hand",proximity>.4);
+  }
  });
 }
-function fanCards(index){sweepCards(index)}
+function fanCards(i){sweepCards(i)}
 function clearFan(){
- if(picking)return;
- many(".file-tab, #cursorReplica .file-tab").forEach(card=>{
-  card.classList.remove("is-shifted","is-under-hand");
-  for(const prop of ["--paper-offset","--paper-scale","--paper-tilt","--paper-light"])
-   card.style.removeProperty(prop);
+ many("#fileStack .file-tab, #cursorReplica .file-tab").forEach(card=>{
+  for(const key of ["--paper-offset","--paper-scale","--paper-tilt","--paper-light"])card.style.removeProperty(key);
+  card.classList.remove("is-under-hand","is-selected");
  });
- scheduleLensRefresh();
 }
-function pickFolder(index){
+function pickFolder(i){
  if(!drawerOpen||picking)return;
  picking=true;
- const cards=many(".file-tab");
- cards.forEach(card=>{card.classList.remove("is-shifted","is-selected","is-under-hand");card.style.removeProperty("--paper-offset");card.style.removeProperty("--paper-scale");card.style.removeProperty("--paper-tilt");card.style.removeProperty("--paper-light")});
- cards[index].classList.add("is-selected");
+ const cards=many("#fileStack .file-tab");clearFan();
+ cards[i].classList.add("is-selected");
  setTimeout(()=>{
   picking=false;
-  if(!drawerOpen||activeView!=="archive")return;
-  openProject(index);
- },reduced.matches?0:320);
+  if(drawerOpen&&activeView==="archive")openProject(i);
+ },reduced.matches?0:420);
 }
-function openProject(index){
- selectedProject=index;
- previousFocus=document.activeElement;
- const p=projects[index];
+function openProject(i){
+ selectedProject=i;previousFocus=document.activeElement;
+ const p=projects[i];
  one("#projectTitle").textContent=p.title;
  one("#projectCategory").textContent=p.category.toUpperCase();
  one("#projectDescription").textContent=p.description;
- one("#projectRef").textContent="FICHA DE ARCHIVO / "+String(index+1).padStart(3,"0")+" — 006";
- one("#projectArtNo").textContent=String(index+1).padStart(3,"0");
+ one("#projectRef").textContent="FICHA DE ARCHIVO / "+String(i+1).padStart(3,"0")+" — 006";
+ one("#projectArtNo").textContent=String(i+1).padStart(3,"0");
  one("#projectWord").textContent=p.word;
  one("#projectArtwork").style.setProperty("--project-color",p.color);
  const modal=one("#projectModal");modal.hidden=false;modal.setAttribute("aria-hidden","false");
- document.body.style.overflow="hidden";
- one("#closeProject").focus();
+ document.body.style.overflow="hidden";one("#closeProject").focus();
  scheduleLensRefresh();
 }
-function closeProject(restoreFocus=true){
- const modal=one("#projectModal");
- if(modal.hidden)return;
+function closeProject(restore=true){
+ const modal=one("#projectModal");if(modal.hidden)return;
  modal.hidden=true;modal.setAttribute("aria-hidden","true");
- document.body.style.overflow="";
- many(".file-tab").forEach(card=>card.classList.remove("is-selected"));
- if(restoreFocus&&previousFocus&&previousFocus.isConnected&&!previousFocus.disabled)previousFocus.focus();
+ document.body.style.overflow="";clearFan();
+ if(restore&&previousFocus&&previousFocus.isConnected&&!previousFocus.disabled)previousFocus.focus();
  scheduleLensRefresh();
 }
 function switchView(view,animate=true){
- if(!views[view]||navigating)return;
- if(view===activeView)return;
+ if(!views[view]||navigating||view===activeView)return;
  closeProject(false);
  const apply=()=>{
-  one("#homeView").hidden=view==="about";
-  one("#aboutView").hidden=view!=="about";
+  one("#homeView").hidden=view==="about";one("#aboutView").hidden=view!=="about";
   one("#archiveView").inert=view!=="archive";
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
-  if(view==="home"){
-   resetBlindsForHome();
-   clearTimeout(openingTimer);setDrawer(false);
-   cabinetFocused=false;one("#cabinet").classList.remove("is-focused");
-  }else if(view==="archive"){
-   openBlindsVisual();
-  }else{
-   clearTimeout(openingTimer);setDrawer(false);
-   cabinetFocused=false;one("#cabinet").classList.remove("is-focused");
-  }
+  if(view==="home"){resetBlindsForHome();resetCabinet()}
+  else if(view==="archive")openBlindsVisual();
+  else resetCabinet();
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
   });
-  window.scrollTo({top:0,behavior:"instant"});
-  scheduleLensRefresh();
+  window.scrollTo({top:0,behavior:"instant"});scheduleLensRefresh();
  };
  const sameScene=(activeView==="home"&&view==="archive")||(activeView==="archive"&&view==="home");
  if(animate&&!reduced.matches&&!sameScene){
@@ -208,35 +234,30 @@ function switchView(view,animate=true){
 }
 const routeFromHash=()=>location.hash==="#archivo"?"archive":location.hash==="#sobre-mi"?"about":"home";
 many("[data-view]").forEach(link=>link.addEventListener("click",event=>{
- event.preventDefault();
- if(navigating)return;
- const view=link.dataset.view;
- if(activeView===view)return;
+ event.preventDefault();if(navigating)return;
+ const view=link.dataset.view;if(activeView===view)return;
  history.pushState({view},"",view==="home"?"#inicio":view==="archive"?"#archivo":"#sobre-mi");
  switchView(view);
 }));
 addEventListener("popstate",()=>switchView(routeFromHash(),false));
 addEventListener("hashchange",()=>switchView(routeFromHash(),false));
-many("[data-drawer]").forEach(button=>{
- button.addEventListener("click",event=>{event.stopPropagation();clickDrawer(button.dataset.drawer)});
-});
-one("#cabinet").addEventListener("click",event=>{
- if(event.target.closest(".file-tab")||event.target.closest(".drawer-hit"))return;
- focusCabinet();
-});
 one("#closeProject").addEventListener("click",()=>closeProject());
 one("#nextProject").addEventListener("click",()=>openProject((selectedProject+1)%projects.length));
 one("#projectModal").addEventListener("click",event=>{if(event.target===event.currentTarget)closeProject()});
 addEventListener("keydown",event=>{
- if(event.key==="Escape"){closeProject();return}
+ if(event.key==="Escape"){
+  if(!one("#projectModal").hidden)closeProject();
+  else if(drawerOpen||cabinetFocused)resetCabinet();
+  return;
+ }
  const modal=one("#projectModal");
  if(event.key==="Tab"&&!modal.hidden){
-  const targets=many("#projectModal button:not([disabled])");
-  if(!targets.length)return;
-  if(event.shiftKey&&document.activeElement===targets[0]){event.preventDefault();targets.at(-1).focus()}
-  if(!event.shiftKey&&document.activeElement===targets.at(-1)){event.preventDefault();targets[0].focus()}
+  const items=many("#projectModal button:not([disabled])");
+  if(event.shiftKey&&document.activeElement===items[0]){event.preventDefault();items.at(-1).focus()}
+  if(!event.shiftKey&&document.activeElement===items.at(-1)){event.preventDefault();items[0].focus()}
  }
 });
+
 /* Small default magnifying cursor, no switch.
    A passive, clipped magnified DOM duplicate provides real page detail
    under the lens. The original page remains the only interactive layer. */
@@ -423,6 +444,16 @@ cord.addEventListener("click",()=>{
  cordMoved=false;
 });
 
-buildFolders();
+
+
+buildWall();
 setDrawer(false);
 switchView(routeFromHash(),false);
+let lastSmall=innerWidth<700;
+addEventListener("resize",()=>{
+ const small=innerWidth<700;
+ if(small!==lastSmall){
+  lastSmall=small;resetCabinet();
+  buildWall();
+ }
+});
