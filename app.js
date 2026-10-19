@@ -173,6 +173,13 @@ function switchView(view,animate=true){
  if(view===activeView)return;
  closeProject(false);
  const apply=()=>{
+  if(view==="archive"){
+   if(blind.parentElement!==views.archive)views.archive.prepend(blind);
+   blind.classList.add("is-lifting");blindsOpened=true;
+  } else if(view==="home"){
+   const entry=one("#detectiveEntry");
+   if(blind.parentElement!==entry)entry.append(blind);
+  }
   for(const [name,element] of Object.entries(views))element.hidden=name!==view;
   activeView=view;
   document.body.classList.toggle("is-archive",view==="archive");
@@ -288,7 +295,7 @@ addEventListener("resize",()=>{
 /* Real venetian blind: each horizontal slat has its own tilt.
    Pulling either cord (pointer drag) or activating the accessible button
    raises the slats as a compact stack before revealing the archive. */
-const SLATS=38;
+const SLATS=22;
 const slatHost=one("#venetianSlats");
 const blind=one("#venetianWindow");
 let blindsOpened=false,blindPointerY=null,blindRAF=0,cordStartY=null,cordDrag=0,cordMoved=false;
@@ -296,7 +303,7 @@ for(let i=0;i<SLATS;i++){
  const slat=document.createElement("span");
  slat.className="blind-slat";slat.style.setProperty("--i",i);
  slat.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
- slat.style.setProperty("--lift-delay",((SLATS-1-i)*11)+"ms");
+ slat.style.setProperty("--lift-delay",((SLATS-1-i)*14)+"ms");
  slatHost.append(slat);
 }
 const slats=many(".blind-slat");
@@ -310,7 +317,6 @@ const blindSurface=one("#venetianWindow");
 // Listen on the entire blind rather than only its slat container.
 blindSurface.addEventListener("pointermove",event=>{
  if(blindsOpened||!finePointer.matches||event.pointerType!=="mouse")return;
- if(event.target.closest("#blindCord")||event.target.closest("#blindKeyboardButton"))return;
  blindPointerY=event.clientY;
  if(blindRAF)return;
  blindRAF=requestAnimationFrame(()=>{
@@ -322,7 +328,7 @@ blindSurface.addEventListener("pointermove",event=>{
   slats.forEach((slat,i)=>{
    const y=(i+.5)*rect.height/SLATS;
    const strength=Math.pow(Math.max(0,1-Math.abs(y-local)/radius),1.1);
-   const tilt=(strength*69).toFixed(1)+"deg";
+   const tilt=(strength*76).toFixed(1)+"deg";
    slat.style.setProperty("--tilt",tilt);
    slat.style.setProperty("--light",strength.toFixed(2));
    slat.style.setProperty("--slat-open",strength.toFixed(2));
@@ -339,8 +345,6 @@ function resetBlindsForHome(){
  blindsOpened=false;
  blind.classList.remove("is-lifting");
  one("#blindCord").disabled=false;
- one("#blindKeyboardButton").disabled=false;
- one("#blindHelp").textContent="Desliza el cursor por las lamas. Tira de la cuerda para entrar.";
  resetSlats();
 }
 function liftBlinds(){
@@ -349,8 +353,6 @@ function liftBlinds(){
  resetSlats();
  blind.classList.add("is-lifting");
  one("#blindCord").disabled=true;
- one("#blindKeyboardButton").disabled=true;
- one("#blindHelp").textContent="Abriendo el archivo…";
  const delay=reduced.matches?140:1780;
  setTimeout(()=>{
   if(activeView!=="home")return;
@@ -382,7 +384,6 @@ cord.addEventListener("pointercancel",()=>{
  cordStartY=null;cord.classList.remove("is-dragging");cord.style.removeProperty("--cord-drag");
 });
 cord.addEventListener("click",()=>{if(!cordMoved)liftBlinds();cordMoved=false});
-one("#blindKeyboardButton").addEventListener("click",liftBlinds);
 
 buildFolders();
 setDrawer(false);
