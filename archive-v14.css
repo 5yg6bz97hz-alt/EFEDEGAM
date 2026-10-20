@@ -103,12 +103,17 @@
  opacity:0!important;
  animation:none!important;
 }
+/* Keep the hand-built pixel image at 100%: never crossfade to vector foliage. */
 #archiveView .drawer-unit.is-plant-drawer.is-grown .plant-sprout{
- opacity:1!important;
+ opacity:0!important;
  animation:none!important;
 }
 #archiveView .drawer-unit.is-plant-drawer.is-grown .plant-pixels{
- opacity:0!important;
+ opacity:1!important;
+}
+#archiveView .drawer-unit.is-plant-drawer.is-raster-fallback.is-grown .plant-sprout{
+ opacity:1!important;
+ image-rendering:pixelated!important;
 }
 /* The case stays extended until the last green pixels have receded. */
 #archiveView .drawer-unit.is-plant-drawer.is-sprouting .drawer-face{

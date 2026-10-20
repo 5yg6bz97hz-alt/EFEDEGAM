@@ -36,7 +36,7 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  unit.dataset.number=id;
  if(plantCell){
   const cavity=document.createElement("div");cavity.className="plant-cavity";cavity.setAttribute("aria-hidden","true");
-  const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v12.svg?v=13";sprout.alt="";sprout.className="plant-sprout";sprout.loading="eager";sprout.decoding="async";
+  const sprout=document.createElement("img");sprout.src="assets/plant-sprout-v15.svg";sprout.alt="";sprout.className="plant-sprout";sprout.loading="eager";sprout.decoding="async";
   const pixels=document.createElement("canvas");
   pixels.className="plant-pixels";pixels.width=360;pixels.height=342;
   pixels.setAttribute("aria-hidden","true");
@@ -276,7 +276,7 @@ function renderPlantPixels(progress){
 }
 function setPlantFullyClosed(){
  if(!plantDrawer)return;
- plantDrawer.classList.remove("is-sprouting","is-grown","is-pixel-growing","is-pixel-closing","plant-gentle-shake","is-shaking","is-inviting");
+ plantDrawer.classList.remove("is-sprouting","is-grown","is-pixel-growing","is-pixel-closing","is-raster-fallback","plant-gentle-shake","is-shaking","is-inviting");
  plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded","false");
  plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-label","Abrir el cajón de la planta");
  plantProgress=0;renderPlantPixels(0);
@@ -292,6 +292,7 @@ function animatePlantTo(open){
   if(img?.complete&&img?.naturalWidth){
    plantDrawer.classList.toggle("is-sprouting",open);
    plantDrawer.classList.toggle("is-grown",open);
+   plantDrawer.classList.toggle("is-raster-fallback",open);
    plantDrawer.querySelector(".drawer-click")?.setAttribute("aria-expanded",String(open));
    if(!open)setPlantFullyClosed();
    return;
@@ -300,7 +301,12 @@ function animatePlantTo(open){
    plantRasterLoading=true;
    const onLoad=()=>{plantRasterLoading=false;if(plantTargetOpen)animatePlantTo(true)};
    img.addEventListener("load",onLoad,{once:true});
-   img.addEventListener("error",()=>{plantRasterLoading=false;if(plantTargetOpen){plantDrawer.classList.add("is-grown");}},{once:true});
+   img.addEventListener("error",()=>{
+    plantRasterLoading=false;
+    if(plantTargetOpen){
+     plantDrawer.classList.add("is-grown","is-raster-fallback");
+    }
+   },{once:true});
   }
   if(open){
    plantDrawer.classList.add("is-sprouting");
@@ -309,6 +315,7 @@ function animatePlantTo(open){
   }else setPlantFullyClosed();
   return;
  }
+ plantDrawer.classList.remove("is-raster-fallback");
  plantDrawer.classList.add("is-sprouting");
  plantDrawer.classList.toggle("is-pixel-growing",open);
  plantDrawer.classList.toggle("is-pixel-closing",!open);
