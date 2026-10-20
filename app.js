@@ -12,6 +12,9 @@ const one=selector=>document.querySelector(selector);
 const many=selector=>Array.from(document.querySelectorAll(selector));
 const reduced=matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer=matchMedia("(pointer:fine)");
+// Contact recipient pending confirmation from the portfolio owner.
+const portfolioContactEmail="";
+const portfolioMailto="mailto:"+portfolioContactEmail+"?subject="+encodeURIComponent("Hola desde EFEDEGAM")+"&body="+encodeURIComponent("¡Hola! He visto tu portfolio EFEDEGAM y quería ponerme en contacto contigo.\n\n");
 const views={home:one("#homeView"),archive:one("#homeView"),about:one("#aboutView"),vacio:one("#voidView")};
 let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFocus=null,navigating=false;
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
@@ -58,7 +61,12 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell,storyType){
    visual.innerHTML='<svg class="phone-coil" viewBox="0 0 160 260" preserveAspectRatio="none" aria-hidden="true">'+
     '<path d="M80 0 C20 17 140 30 80 44 S20 70 80 84 S140 112 80 126 S20 153 80 166 S140 196 80 209 S20 235 80 260" stroke="#334d3b" stroke-width="5" fill="none" stroke-linecap="round"/>'+
     '<path d="M80 0 C20 17 140 30 80 44 S20 70 80 84 S140 112 80 126 S20 153 80 166 S140 196 80 209 S20 235 80 260" stroke="#a8bf95" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".65"/></svg>'+
-    '<img class="phone-handset" src="assets/telefono-oliva-v18.svg" alt="" draggable="false">';
+    '<a class="phone-contact-link" href="'+portfolioMailto+'" aria-label="Escribir un correo a EFEDEGAM" title="Enviar un correo"><img class="phone-handset" src="assets/telefono-oliva-v18.svg" alt="" draggable="false"></a>';
+   const mailLink=visual.querySelector(".phone-contact-link");
+   mailLink.tabIndex=-1;
+   mailLink.setAttribute("aria-hidden","true");
+   mailLink.addEventListener("click",event=>event.stopPropagation());
+   mailLink.addEventListener("pointerdown",event=>event.stopPropagation());
   } else {
    visual.innerHTML='<div class="ticket-feeder"></div><div class="ticket-paper">'+
     '<div class="ticket-brand">EFEDEGAM</div>'+
@@ -72,7 +80,8 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell,storyType){
     '<div class="ticket-foot">FIN (POR AHORA) ✳<br>* TEXTO PROVISIONAL *</div>'+
     '</div>';
   }
-  visual.addEventListener("click",()=>{
+  visual.addEventListener("click",event=>{
+   if(event.target.closest(".phone-contact-link"))return;
    if(activeView==="archive"&&!voidBusy){cancelIntroSequence();toggleStoryDrawer(unit)}
   });
   unit.append(visual);
@@ -227,6 +236,12 @@ function toggleStoryDrawer(unit,open=!unit.classList.contains("is-story-open")){
  if(!["film","phone","ticket"].includes(kind))return;
  unit.classList.toggle("is-story-open",open);
  unit.classList.toggle("is-story-shut",!open);
+ const contact=unit.querySelector(".phone-contact-link");
+ if(contact){
+  contact.tabIndex=open?0:-1;
+  contact.setAttribute("aria-hidden",String(!open));
+  unit.querySelector(".phone-visual")?.setAttribute("aria-hidden",String(!open));
+ }
  const button=unit.querySelector(".drawer-click");
  if(button){
   button.setAttribute("aria-expanded",String(open));
