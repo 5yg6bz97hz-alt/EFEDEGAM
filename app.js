@@ -17,22 +17,22 @@ let activeView=null,drawerOpen=false,picking=false,selectedProject=0,previousFoc
 let lensX=innerWidth/2,lensY=innerHeight/2,lensFrame=0,lensEnabled=false,replicaTimer=null;
 let cabinetFocused=false,openingTimer=null,lockedTimer=null;
 const wall=one("#cabinet"),cells=one("#cabinetCells");
-let hero=null,voidDrawer=null,plantDrawer=null,layoutIsSmall=null,voidBusy=false,voidTimer=null;
+let hero=null,voidDrawer=null,plantDrawer=null,filmDrawer=null,phoneDrawer=null,ticketDrawer=null,layoutIsSmall=null,voidBusy=false,voidTimer=null;
 let introTimers=[];
 let introSequenceActive=false;
 let introPlayed=false;
 let plantProgress=0,plantFrame=0,plantTargetOpen=false,plantRaster=null,plantRasterLoading=false;
-function makeUnit(index,col,row,heroCell,voidCell,plantCell){
+function makeUnit(index,col,row,heroCell,voidCell,plantCell,storyType){
  // Reserve 023 and 099 for the special drawers without duplicate serial numbers.
  let serial=index+1;
  if(serial>=23)serial++;
  if(serial>=99)serial++;
  const id=heroCell?"023":voidCell?"099":String(serial).padStart(3,"0");
  const unit=document.createElement("div");
- unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(plantCell?" is-plant-drawer":"");
+ unit.className="drawer-unit"+(heroCell?" is-hero":"")+(voidCell?" is-void-drawer":"")+(plantCell?" is-plant-drawer":"")+(storyType?" is-story-drawer is-story-"+storyType:"");
  unit.style.gridColumn=String(col+1);
  unit.style.gridRow=String(row+1);
- unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":plantCell?"plant":"locked";
+ unit.dataset.drawer=heroCell?"middle":voidCell?"vacio":plantCell?"plant":storyType||"locked";
  unit.dataset.number=id;
  if(plantCell){
   const cavity=document.createElement("div");cavity.className="plant-cavity";cavity.setAttribute("aria-hidden","true");
@@ -41,6 +41,41 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell){
   pixels.className="plant-pixels";pixels.width=360;pixels.height=342;
   pixels.setAttribute("aria-hidden","true");
   unit.append(cavity,pixels,sprout);
+ }
+ if(storyType){
+  const cavity=document.createElement("div");
+  cavity.className="story-cavity";
+  cavity.setAttribute("aria-hidden","true");
+  unit.append(cavity);
+  const visual=document.createElement("div");
+  visual.className="story-visual "+storyType+"-visual";
+  visual.setAttribute("aria-hidden","true");
+  if(storyType==="film"){
+   visual.innerHTML='<div class="film-roller"></div><div class="film-ribbon">'+
+    Array.from({length:9},(_,i)=>'<div class="film-frame film-frame-'+(i%5)+'"><span class="film-frame-image"></span><span class="film-frame-index">'+String(i+1).padStart(2,"0")+'</span></div>').join("")+
+    '</div><span class="film-tail"></span>';
+  } else if(storyType==="phone"){
+   visual.innerHTML='<svg class="phone-coil" viewBox="0 0 160 260" preserveAspectRatio="none" aria-hidden="true">'+
+    '<path d="M80 0 C20 17 140 30 80 44 S20 70 80 84 S140 112 80 126 S20 153 80 166 S140 196 80 209 S20 235 80 260" stroke="#334d3b" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+    '<path d="M80 0 C20 17 140 30 80 44 S20 70 80 84 S140 112 80 126 S20 153 80 166 S140 196 80 209 S20 235 80 260" stroke="#a8bf95" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".65"/></svg>'+
+    '<img class="phone-handset" src="assets/telefono-oliva-v18.svg" alt="" draggable="false">';
+  } else {
+   visual.innerHTML='<div class="ticket-feeder"></div><div class="ticket-paper">'+
+    '<div class="ticket-brand">EFEDEGAM</div>'+
+    '<div class="ticket-meta">RECIBO Nº 018<br>ARCHIVO PERSONAL · 2026</div>'+
+    '<div class="ticket-rule">--------------------------------</div>'+
+    '<div class="ticket-title">UN POCO SOBRE MÍ</div>'+
+    '<p>Este archivo guarda cosas que me gustan, ideas que encuentro y proyectos que voy haciendo.</p>'+
+    '<p>Arquitectura, imágenes, dibujos, fotografías y objetos. A veces todo mezclado.</p>'+
+    '<div class="ticket-rule">--------------------------------</div>'+
+    '<p>NO ES UN CATÁLOGO.<br>ES UN DIARIO EN CONSTRUCCIÓN.</p>'+
+    '<div class="ticket-foot">FIN (POR AHORA) ✳<br>* TEXTO PROVISIONAL *</div>'+
+    '</div>';
+  }
+  visual.addEventListener("click",()=>{
+   if(activeView==="archive"&&!voidBusy){cancelIntroSequence();toggleStoryDrawer(unit)}
+  });
+  unit.append(visual);
  }
  if(heroCell){
   const cavity=document.createElement("div");cavity.className="drawer-cavity";unit.append(cavity);
@@ -54,10 +89,10 @@ function makeUnit(index,col,row,heroCell,voidCell,plantCell){
  front.innerHTML='<span class="drawer-card-label">'+(heroCell?"PROYECTOS":voidCell?"ARCHIVO ESPECIAL":("F. "+id))+'</span><span class="drawer-handle"></span><span class="drawer-id">'+id+'</span>'+(voidCell?'<span class="drawer-void-sticker">EL VACÍO</span>':'');
  const button=document.createElement("button");
  button.type="button";button.className="drawer-click";
- button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":plantCell?"Cajón botánico; una planta brota en su interior":"Cajón "+id+" cerrado con llave");
+ button.setAttribute("aria-label",heroCell?"Acercar y abrir el cajón 023 de proyectos":voidCell?"Abrir cajón 099 y entrar en El Vacío":plantCell?"Abrir el cajón de la planta":storyType?({film:"Abrir cajón de película analógica",phone:"Abrir cajón del teléfono verde",ticket:"Abrir cajón del ticket Sobre mí"}[storyType]):"Cajón "+id+" cerrado con llave");
  if(heroCell){button.setAttribute("aria-controls","fileStack");button.setAttribute("aria-expanded","false")}
- if(plantCell)button.setAttribute("aria-expanded","false");
- button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell,plantCell));
+ if(plantCell||storyType)button.setAttribute("aria-expanded","false");
+ button.addEventListener("click",()=>clickDrawer(unit,heroCell,voidCell,plantCell,storyType));
  front.append(button);unit.append(front);
  return unit;
 }
@@ -68,17 +103,23 @@ function buildWall(){
  const cols=small?9:15,rows=small?10:9;
  wall.style.setProperty("--cols",String(cols));wall.style.setProperty("--rows",String(rows));
  const centerRow=Math.floor(rows/2),centerCol=Math.floor(cols/2);
- hero=null;voidDrawer=null;plantDrawer=null;
+ hero=null;voidDrawer=null;plantDrawer=null;filmDrawer=null;phoneDrawer=null;ticketDrawer=null;
  const fragment=document.createDocumentFragment();
  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
   const i=r*cols+c;
   const isHero=r===centerRow&&c===centerCol;
   const isVoid=r===(small?3:3)&&c===(small?7:12);
   const isPlant=r===(small?6:6)&&c===(small?2:3);
-  const unit=makeUnit(i,c,r,isHero,isVoid,isPlant);
+  const storyType=r===(small?1:1)&&c===(small?2:4)?"film":
+                  r===(small?5:5)&&c===(small?7:12)?"phone":
+                  r===(small?1:2)&&c===(small?5:10)?"ticket":null;
+  const unit=makeUnit(i,c,r,isHero,isVoid,isPlant,storyType);
   if(isHero)hero=unit;
   if(isVoid)voidDrawer=unit;
   if(isPlant)plantDrawer=unit;
+  if(storyType==="film")filmDrawer=unit;
+  if(storyType==="phone")phoneDrawer=unit;
+  if(storyType==="ticket")ticketDrawer=unit;
   fragment.append(unit);
  }
  cancelPlantFrame();plantRaster=null;plantRasterLoading=false;plantProgress=0;plantTargetOpen=false;
@@ -150,8 +191,9 @@ function jiggleLocked(unit){
  clearTimeout(lockedTimer);
  lockedTimer=setTimeout(()=>unit.classList.remove("is-shaking"),500);
 }
-function clickDrawer(unit,isHero,isVoid,isPlant){
+function clickDrawer(unit,isHero,isVoid,isPlant,storyType){
  if(voidBusy)return;
+ if(storyType){cancelIntroSequence();toggleStoryDrawer(unit);return}
  if(isPlant){
   cancelIntroSequence();
   if(plantTargetOpen)closePlantDrawer(true);
@@ -176,6 +218,37 @@ function clickDrawer(unit,isHero,isVoid,isPlant){
   focusCabinet();clearTimeout(openingTimer);
   openingTimer=setTimeout(()=>setDrawer(true),reduced.matches?0:1180);
  }else setDrawer(true);
+}
+/* Three independent small stories live in the filing wall. Each drawer
+   is clickable/keyboard-operable, and can be opened or put away again. */
+function toggleStoryDrawer(unit,open=!unit.classList.contains("is-story-open")){
+ if(!unit||!unit.isConnected)return;
+ const kind=unit.dataset.drawer;
+ if(!["film","phone","ticket"].includes(kind))return;
+ unit.classList.toggle("is-story-open",open);
+ unit.classList.toggle("is-story-shut",!open);
+ const button=unit.querySelector(".drawer-click");
+ if(button){
+  button.setAttribute("aria-expanded",String(open));
+  const labels={
+   film:open?"Cerrar cajón de película analógica":"Abrir cajón de película analógica",
+   phone:open?"Guardar teléfono verde":"Sacar teléfono verde",
+   ticket:open?"Guardar el ticket Sobre mí":"Imprimir el ticket Sobre mí"
+  };
+  button.setAttribute("aria-label",labels[kind]);
+ }
+ if(kind==="ticket"&&open){
+  // Replay the abrupt thermal-printer motion on every fresh opening.
+  const paper=unit.querySelector(".ticket-paper");
+  if(paper){paper.style.animation="none";void paper.offsetWidth;paper.style.removeProperty("animation")}
+ }
+ scheduleLensRefresh();
+ setTimeout(scheduleLensRefresh,1400);
+}
+function resetStoryDrawers(){
+ for(const unit of [filmDrawer,phoneDrawer,ticketDrawer]){
+  if(unit)toggleStoryDrawer(unit,false);
+ }
 }
 function enterVoid(unit){
  if(voidBusy||activeView!=="archive")return;
@@ -374,6 +447,7 @@ function resetArchiveIntro(){
  cancelIntroSequence();
  introPlayed=false;
  closePlantDrawer(false);
+ resetStoryDrawers();
  hero?.classList.remove("is-shaking","is-inviting");
  voidDrawer?.classList.remove("is-shaking","is-inviting");
 }
@@ -382,12 +456,17 @@ function runArchiveIntro(){
  introPlayed=true;
  introSequenceActive=true;
  closePlantDrawer(false);
+ resetStoryDrawers();
  // Give the Venetian blind enough time to finish its 1.4s lift.
  introAfter(1550,()=>pulseDrawer(hero));
  introAfter(2700,()=>pulseDrawer(voidDrawer));
  introAfter(3850,()=>pulseDrawer(plantDrawer));
  introAfter(4850,()=>openPlantDrawer());
- introAfter(6250,()=>{introSequenceActive=false;scheduleLensRefresh()});
+ // Personal ephemera emerge only once the plant has nearly finished growing.
+ introAfter(7950,()=>toggleStoryDrawer(filmDrawer,true));
+ introAfter(10050,()=>toggleStoryDrawer(phoneDrawer,true));
+ introAfter(12400,()=>toggleStoryDrawer(ticketDrawer,true));
+ introAfter(14000,()=>{introSequenceActive=false;scheduleLensRefresh()});
 }
 function sweepCards(position){
  if(!drawerOpen||picking)return;
