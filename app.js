@@ -131,12 +131,15 @@ function setDrawer(open){
 }
 function focusCabinet(){
  if(cabinetFocused)return;
- cabinetFocused=true;wall.classList.add("is-zoomed");
+ cabinetFocused=true;
+ one("#archiveView .archive-stage-v6").classList.add("is-project-zoom");
+ wall.classList.add("is-zoomed");
  scheduleLensRefresh();setTimeout(scheduleLensRefresh,1350);
 }
 function resetCabinet(){
  clearTimeout(openingTimer);
  setDrawer(false);cabinetFocused=false;wall.classList.remove("is-zoomed","is-void-zoom");
+ one("#archiveView .archive-stage-v6").classList.remove("is-project-zoom");
  wall.style.removeProperty("transform-origin");
  scheduleLensRefresh();
 }
@@ -162,7 +165,10 @@ function clickDrawer(unit,isHero,isVoid,isPlant){
   setDrawer(false);
   clearTimeout(openingTimer);
   openingTimer=setTimeout(()=>{
-   cabinetFocused=false;wall.classList.remove("is-zoomed");scheduleLensRefresh();
+   cabinetFocused=false;
+   wall.classList.remove("is-zoomed");
+   one("#archiveView .archive-stage-v6").classList.remove("is-project-zoom");
+   scheduleLensRefresh();
   },reduced.matches?0:600);
   return;
  }
@@ -178,6 +184,7 @@ function enterVoid(unit){
  if(drawerOpen)setDrawer(false);
  cabinetFocused=false;
  wall.classList.remove("is-zoomed");
+ one("#archiveView .archive-stage-v6").classList.remove("is-project-zoom");
  const x=(unit.offsetLeft+unit.offsetWidth/2)/wall.offsetWidth*100;
  const y=(unit.offsetTop+unit.offsetHeight/2)/wall.offsetHeight*100;
  wall.style.transformOrigin=x.toFixed(2)+"% "+y.toFixed(2)+"%";
