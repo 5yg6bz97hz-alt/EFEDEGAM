@@ -96,7 +96,7 @@ function buildFolders(){
   card.style.setProperty("--tab-color",project.color);
   card.style.setProperty("--folder-color",project.color);
   card.style.setProperty("--tab-left",["7%","33%","58%","16%","50%","65%"][index]);
-  card.innerHTML='<span class="file-number">'+label+'</span><span class="file-name">'+project.title+'</span><span class="file-arrow">↗</span>';
+  card.innerHTML='<span class="file-card-head"><span class="file-number">'+label+'</span><span class="file-name">'+project.title+'</span><span class="file-arrow">↗</span></span><span class="file-card-info"><span class="file-edition">EFEDEGAM · ARCHIVO</span><span class="file-card-category">'+project.category+'</span><span class="file-card-index">EXP. / '+label+'</span></span>';
   card.setAttribute("aria-label","Abrir carpeta "+label+": "+project.title);
   card.addEventListener("mouseenter",()=>fanCards(index));
   card.addEventListener("focus",()=>fanCards(index));
@@ -396,9 +396,10 @@ function sweepCards(position){
  cards.forEach((card,i)=>{
   const distance=Math.abs(i-position);
   const proximity=Math.max(0,1-distance*.75);
-  const offset=proximity>0 ? -67*proximity:(i>position?16:0);
+  // Longer dossiers remain partially inside the drawer even when lifted.
+  const offset=proximity>0 ? -34*proximity:(i>position?8:0);
   const scale=1+proximity*.065;
-  const tilt=-15*proximity;
+  const tilt=-8*proximity;
   for(const node of [card,clones[i]].filter(Boolean)){
    node.style.setProperty("--paper-offset",offset.toFixed(1)+"%");
    node.style.setProperty("--paper-scale",scale.toFixed(3));
