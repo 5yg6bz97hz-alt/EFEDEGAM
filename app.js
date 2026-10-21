@@ -24,6 +24,8 @@ let hero=null,voidDrawer=null,plantDrawer=null,filmDrawer=null,phoneDrawer=null,
 let introTimers=[];
 let introSequenceActive=false;
 let introPlayed=false;
+let roomIntroTimers=[],roomIntroFinished=false;
+const roomScene=one("#roomScene"),roomWorld=one("#roomWorld");
 let plantProgress=0,plantFrame=0,plantTargetOpen=false,plantRaster=null,plantRasterLoading=false;
 function makeUnit(index,col,row,heroCell,voidCell,plantCell,storyType){
  // Reserve 023 and 099 for the special drawers without duplicate serial numbers.
@@ -458,30 +460,53 @@ function openPlantDrawer(){
  if(!plantDrawer||!plantDrawer.isConnected)return;
  animatePlantTo(true);
 }
+/* The impact is physically linked to the camera stopping: the entire wall
+   rattles, then each front settles ajar by a few millimetres. */
+function resetImpactDrawers(){
+ many("#cabinetCells .drawer-unit").forEach(unit=>{
+  unit.classList.remove("is-impact-ajar","is-impact-rattling");
+  unit.style.removeProperty("--impact-delay");
+  unit.style.removeProperty("--impact-open");
+ });
+}
+function hitArchiveWall(){
+ const drawers=many("#cabinetCells .drawer-unit");
+ drawers.forEach((unit,index)=>{
+  const row=Math.floor(index/(layoutIsSmall?9:15));
+  const stagger=(index*41+row*23)%410;
+  unit.style.setProperty("--impact-delay",stagger+"ms");
+  unit.style.setProperty("--impact-open",(7+(index*7)%10)+"%");
+  unit.classList.add("is-impact-ajar","is-impact-rattling");
+ });
+ introAfter(950,()=>{
+  drawers.forEach(unit=>unit.classList.remove("is-impact-rattling"));
+ });
+ one("#drawerInstruction").textContent="El impacto ha sacudido la pared. Explora los cajones: el 023 contiene tus proyectos y el 099 lleva al Vacío.";
+ one("#roomViewStatus").textContent="La sala se ha abierto. Ahora puedes explorar los cajones.";
+ scheduleLensRefresh();
+}
 function resetArchiveIntro(){
  cancelIntroSequence();
  introPlayed=false;
+ resetImpactDrawers();
  closePlantDrawer(false);
  resetStoryDrawers();
  hero?.classList.remove("is-shaking","is-inviting");
  voidDrawer?.classList.remove("is-shaking","is-inviting");
 }
 function runArchiveIntro(){
- if(introPlayed || activeView!=="archive")return;
+ if(introPlayed||activeView!=="archive")return;
  introPlayed=true;
  introSequenceActive=true;
  closePlantDrawer(false);
  resetStoryDrawers();
- // Give the Venetian blind enough time to finish its 1.4s lift.
- introAfter(1550,()=>pulseDrawer(hero));
- introAfter(2700,()=>pulseDrawer(voidDrawer));
- introAfter(3850,()=>pulseDrawer(plantDrawer));
- introAfter(4850,()=>openPlantDrawer());
- // Personal ephemera emerge only once the plant has nearly finished growing.
- introAfter(7950,()=>toggleStoryDrawer(filmDrawer,true));
- introAfter(10050,()=>toggleStoryDrawer(phoneDrawer,true));
- introAfter(12400,()=>toggleStoryDrawer(ticketDrawer,true));
- introAfter(14000,()=>{introSequenceActive=false;scheduleLensRefresh()});
+ hitArchiveWall();
+ // Objects reveal themselves AFTER the full-wall shock.
+ introAfter(480,()=>openPlantDrawer());
+ introAfter(1470,()=>toggleStoryDrawer(filmDrawer,true));
+ introAfter(2440,()=>toggleStoryDrawer(phoneDrawer,true));
+ introAfter(3420,()=>toggleStoryDrawer(ticketDrawer,true));
+ introAfter(5300,()=>{introSequenceActive=false;scheduleLensRefresh()});
 }
 function sweepCards(position){
  if(!drawerOpen||picking)return;
@@ -553,9 +578,13 @@ function switchView(view,animate=true){
   document.body.classList.toggle("is-archive",view==="archive");
   document.body.classList.toggle("is-home",view==="home");
   document.body.classList.toggle("is-void",view==="vacio");
-  if(view==="home"){resetBlindsForHome();resetCabinet();resetArchiveIntro()}
-  else if(view==="archive"){openBlindsVisual();runArchiveIntro()}
-  else {resetCabinet();cancelIntroSequence()}
+  if(view==="home"){
+   resetCabinet();resetArchiveIntro();startRoomIntro();
+  }else if(view==="archive"){
+   stopRoomIntro();settleRoomAtArchive();runArchiveIntro();
+  }else{
+   stopRoomIntro();resetCabinet();cancelIntroSequence();
+  }
   many(".nav a").forEach(link=>{
    if(link.dataset.view===view)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
@@ -636,13 +665,13 @@ function scheduleLensRefresh(){
  replicaTimer=setTimeout(()=>requestAnimationFrame(createLensReplica),90);
 }
 function enableLens(){
- if(lensEnabled||!finePointer.matches||reduced.matches)return;
+ if(activeView==="home"||lensEnabled||!finePointer.matches||reduced.matches)return;
  lensEnabled=true;
  createLensReplica();
  document.body.classList.add("lens-active");
 }
 document.addEventListener("pointermove",event=>{
- if(event.pointerType!=="mouse"||!finePointer.matches||reduced.matches)return;
+ if(activeView==="home"||event.pointerType!=="mouse"||!finePointer.matches||reduced.matches)return;
  if(!lensEnabled)enableLens();
  lensX=event.clientX;lensY=event.clientY;
  one("#cursorLens").classList.add("visible");
@@ -660,134 +689,60 @@ addEventListener("resize",()=>{
  }else scheduleLensRefresh();
 });
 
-/* Physical Venetian blind: thick slats remain at the top when raised.
-   Slat inclination and the shadow bands respond to the pointer. */
-const SLATS=14;
-const slatHost=one("#venetianSlats");
-const blind=one("#venetianWindow");
-const shadowHost=one("#blindShadowLayer");
-let blindsOpened=false,blindPointerY=null,blindRAF=0,cordStartY=null,cordDrag=0,cordMoved=false;
-for(let i=0;i<SLATS;i++){
- const slat=document.createElement("span");
- slat.className="blind-slat";
- slat.style.setProperty("--i",i);
- slat.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
- slat.style.setProperty("--lift-delay",((SLATS-1-i)*26)+"ms");
- slatHost.append(slat);
- const shadow=document.createElement("span");
- shadow.className="blind-shadow";
- shadow.style.setProperty("--i",i);
- shadow.style.setProperty("--slat-top",((i*100)/SLATS).toFixed(5)+"%");
- shadow.style.setProperty("--lift-delay",((SLATS-1-i)*26)+"ms");
- shadowHost.append(shadow);
+/* PROVISIONAL ROOM / V20
+   No external 3D library: a simple CSS perspective study, replaceable
+   by a real Blender / glTF scene when the owner's model is ready. */
+function stopRoomIntro(){
+ roomIntroTimers.forEach(clearTimeout);
+ roomIntroTimers=[];
 }
-const slats=many(".blind-slat"),shadows=many(".blind-shadow");
-function resetSlats(){
- [...slats,...shadows,...many("#cursorReplica .blind-slat")].forEach(s=>{
-  for(const prop of ["--tilt","--light","--slat-open"])s.style.removeProperty(prop);
- });
+function roomAfter(ms,cb){
+ roomIntroTimers.push(setTimeout(cb,ms));
 }
-function updateLamelas(y){
- const rect=slatHost.getBoundingClientRect();
- const local=y-rect.top;
- const radius=Math.max(140,rect.height*.21);
- const clones=many("#cursorReplica .blind-slat");
- slats.forEach((slat,i)=>{
-  const middle=(i+.5)*rect.height/SLATS;
-  const force=Math.pow(Math.max(0,1-Math.abs(middle-local)/radius),1.07);
-  const angle=(force*79).toFixed(1)+"deg";
-  const light=force.toFixed(2);
-  slat.style.setProperty("--tilt",angle);
-  slat.style.setProperty("--light",light);
-  slat.style.setProperty("--slat-open",light);
-  if(shadows[i]){
-   shadows[i].style.setProperty("--tilt",angle);
-   shadows[i].style.setProperty("--light",light);
-  }
-  if(clones[i]){
-   clones[i].style.setProperty("--tilt",angle);
-   clones[i].style.setProperty("--light",light);
-   clones[i].style.setProperty("--slat-open",light);
-  }
- });
+function settleRoomAtArchive(){
+ roomIntroFinished=true;
+ roomScene.classList.add("is-arrived");
+ roomScene.classList.remove("is-intro","title-visible","is-charging");
+ roomWorld.classList.remove("is-charging");
+ roomWorld.classList.add("is-approached");
+ one("#skipRoomIntro").hidden=true;
 }
-blind.addEventListener("pointermove",event=>{
- if(blindsOpened||!finePointer.matches||event.pointerType!=="mouse")return;
- if(event.target.closest("#blindCord"))return;
- blindPointerY=event.clientY;
- if(blindRAF)return;
- blindRAF=requestAnimationFrame(()=>{
-  blindRAF=0;
-  updateLamelas(blindPointerY);
- });
-},{passive:true});
-blind.addEventListener("pointerleave",()=>{if(!blindsOpened)resetSlats()});
-function resetBlindsForHome(){
- blindsOpened=false;
- blind.classList.remove("is-lifting");
- const cord=one("#blindCord");
- cord.disabled=false;
- cord.setAttribute("aria-label","Tirar de la cuerda para subir la persiana");
- resetSlats();
- scheduleLensRefresh();
-}
-function openBlindsVisual(){
- blindsOpened=true;
- blind.classList.add("is-lifting");
- const cord=one("#blindCord");
- cord.disabled=false;
- cord.setAttribute("aria-label","Tirar de la cuerda para bajar la persiana");
- resetSlats();
- scheduleLensRefresh();
- setTimeout(scheduleLensRefresh,1300);
-}
-function liftBlinds(){
- if(blindsOpened)return;
- openBlindsVisual();
- history.pushState({view:"archive"},"","#archivo");
+function enterArchiveFromRoom(){
+ if(activeView!=="home")return;
+ stopRoomIntro();
+ settleRoomAtArchive();
+ roomScene.classList.add("is-impact");
+ history.replaceState({view:"archive"},"","#archivo");
  switchView("archive",false);
+ // Do not attach this to roomIntroTimers: switchView deliberately clears
+ // intro timers when it marks the cabinet interactive.
+ setTimeout(()=>roomScene.classList.remove("is-impact"),650);
 }
-function lowerBlinds(){
- if(!blindsOpened)return;
- history.pushState({view:"home"},"","#inicio");
- switchView("home",false);
+function startRoomIntro(){
+ stopRoomIntro();
+ roomIntroFinished=false;
+ roomScene.classList.remove("is-arrived","is-impact","is-charging","title-visible");
+ roomScene.classList.add("is-intro");
+ roomWorld.classList.remove("is-charging","is-approached");
+ one("#skipRoomIntro").hidden=false;
+ one("#roomViewStatus").textContent="Sala de archivo al fondo. Acercamiento cinematográfico en curso.";
+ if(reduced.matches){
+  // No violent camera movement for visitors requesting reduced motion.
+  enterArchiveFromRoom();
+  return;
+ }
+ roomAfter(650,()=>{
+  if(activeView==="home")roomScene.classList.add("title-visible");
+ });
+ roomAfter(2640,()=>{
+  if(activeView!=="home")return;
+  roomScene.classList.remove("title-visible");
+  roomScene.classList.add("is-charging");
+  roomWorld.classList.add("is-charging");
+ });
+ roomAfter(3520,enterArchiveFromRoom);
 }
-const cord=one("#blindCord");
-cord.addEventListener("pointerdown",event=>{
- cordStartY=event.clientY;cordDrag=0;cordMoved=false;
- if(cord.setPointerCapture)cord.setPointerCapture(event.pointerId);
- cord.classList.add("is-dragging");
-});
-cord.addEventListener("pointermove",event=>{
- if(cordStartY===null)return;
- const delta=event.clientY-cordStartY;
- cordDrag=Math.max(0,Math.min(115,Math.abs(delta)));
- cordMoved=cordMoved||cordDrag>9;
- cord.style.setProperty("--cord-drag",cordDrag+"px");
-});
-cord.addEventListener("pointerup",event=>{
- if(cordStartY===null)return;
- const distance=cordDrag;
- cordStartY=null;cord.classList.remove("is-dragging");
- cord.style.removeProperty("--cord-drag");
- if(distance>=34){
-  if(blindsOpened)lowerBlinds();
-  else liftBlinds();
- }
-});
-cord.addEventListener("pointercancel",()=>{
- cordStartY=null;cord.classList.remove("is-dragging");
- cord.style.removeProperty("--cord-drag");
-});
-cord.addEventListener("click",()=>{
- if(!cordMoved){
-  if(blindsOpened)lowerBlinds();
-  else liftBlinds();
- }
- cordMoved=false;
-});
-
-
+one("#skipRoomIntro").addEventListener("click",enterArchiveFromRoom);
 
 buildWall();
 setDrawer(false);

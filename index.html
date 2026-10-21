@@ -25,7 +25,8 @@
   <link rel="stylesheet" href="archive-v17.css?v=17-20261020">
   <link rel="stylesheet" href="archive-v18.css?v=18-20261020">
   <link rel="stylesheet" href="archive-v19.css?v=19-20261020">
-  <script src="app.js?v=19-20261020" defer></script>
+  <link rel="stylesheet" href="room-v20.css?v=20-20261021">
+  <script src="app.js?v=20-20261021" defer></script>
 </head>
 <body>
 <div id="siteFrame">
@@ -40,39 +41,40 @@
   <main>
     <section id="homeView" class="view view-home home-detective" aria-labelledby="homeTitle">
   <h1 class="visually-hidden" id="homeTitle">EFEDEGAM — Archivo personal</h1>
-  <div class="detective-entry" id="detectiveEntry">
-    <div id="archiveView" class="view-archive archive-wall-view" role="region" aria-labelledby="archiveTitle">
-      <h2 id="archiveTitle" class="visually-hidden">Archivo de proyectos. Pared de cajones metálicos.</h2>
-      <div class="archive-stage archive-stage-v6">
-        <div class="archive-wall" id="cabinet" aria-label="Pared de cajones blancos con proyectos en el 023, El Vacío en el 099 y pequeños objetos personales: planta, negativos analógicos, teléfono y ticket.">
-          <div class="archive-drawers" id="cabinetCells"></div>
+  <div class="detective-entry room-entry" id="detectiveEntry">
+    <div class="room-scene" id="roomScene" aria-label="Sala de archivadores; borrador arquitectónico en perspectiva">
+      <div class="room-world" id="roomWorld">
+        <div class="room-ceiling" aria-hidden="true"><div class="room-ceiling-grid"></div></div>
+        <div class="room-side room-side--left" aria-hidden="true"></div>
+        <div class="room-side room-side--right" aria-hidden="true"></div>
+        <div class="room-rear">
+          <div id="archiveView" class="view-archive archive-wall-view" role="region" aria-labelledby="archiveTitle">
+            <h2 id="archiveTitle" class="visually-hidden">Archivo de proyectos. Pared de cajones metálicos.</h2>
+            <div class="archive-stage archive-stage-v6">
+              <div class="archive-wall" id="cabinet" aria-label="Pared de cajones blancos con proyectos en el 023, El Vacío en el 099 y pequeños objetos personales: planta, negativos analógicos, teléfono y ticket.">
+                <div class="archive-drawers" id="cabinetCells"></div>
+              </div>
+              <div class="archive-atmosphere" aria-hidden="true"></div>
+              <p id="drawerInstruction" class="visually-hidden" role="status" aria-live="polite">Selecciona el cajón 023 para explorar los proyectos.</p>
+            </div>
+            <div class="touch-files" id="touchFiles" aria-label="Acceso táctil a carpetas" hidden>
+              <h3>Carpetas de proyectos</h3><div id="touchFileButtons"></div>
+            </div>
+          </div>
+
         </div>
-        <div class="archive-atmosphere" aria-hidden="true"></div>
-        <p id="drawerInstruction" class="visually-hidden" role="status" aria-live="polite">Selecciona el cajón 023 para explorar los proyectos.</p>
+        <div class="room-baseboard" aria-hidden="true"></div>
+        <div class="room-carpet" aria-hidden="true"></div>
+        <div class="room-coldlight" aria-hidden="true"></div>
       </div>
-      <div class="touch-files" id="touchFiles" aria-label="Acceso táctil a carpetas" hidden>
-        <h3>Carpetas de proyectos</h3><div id="touchFileButtons"></div>
-      </div>
-    </div>
-    <div class="venetian-window" id="venetianWindow">
-      <div class="venetian-headrail" aria-hidden="true"></div>
-      <div class="venetian-blinds" id="venetianBlinds">
-        <div class="blind-shadow-layer" id="blindShadowLayer" aria-hidden="true"></div>
-        <div class="venetian-slats" id="venetianSlats" aria-hidden="true"></div>
-        <div class="blind-ladder blind-ladder--left" aria-hidden="true"></div>
-        <div class="blind-ladder blind-ladder--middle" aria-hidden="true"></div>
-      </div>
-      <div class="blind-title" id="blindTitle" aria-hidden="true">
+      <div class="room-impact-flash" aria-hidden="true"></div>
+      <div class="room-title-overlay" id="roomIntroTitle" aria-hidden="true">
+        <span class="room-title-kicker">OBJETOS · IDEAS · PROYECTOS · OTRAS COSAS</span>
         <strong>EFEDEGAM</strong>
-        <span>ARQUITECTURA / IMÁGENES / OBJETOS / PROYECTOS</span>
+        <span class="room-title-sub">UN ARCHIVO PERSONAL · EST. 2026</span>
       </div>
-      <button id="blindCord" class="blind-cord" type="button" aria-label="Tirar de la cuerda para subir la persiana">
-        <span class="cord-pull" aria-hidden="true">
-          <span class="cord-fiber cord-fiber--one"></span>
-          <span class="cord-fiber cord-fiber--two"></span>
-          <span class="cord-knob"></span>
-        </span>
-      </button>
+      <button type="button" class="room-skip-intro" id="skipRoomIntro">Saltar presentación ↗</button>
+      <span class="room-view-status" id="roomViewStatus" aria-live="polite">Una sala por descubrir.</span>
     </div>
   </div>
 </section>
