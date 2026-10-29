@@ -1,0 +1,1 @@
+{"private":true,"description":"Build tooling for the isolated EFEDEGAM 3D experiment","scripts":{"preview":"node build-preview.cjs"},"devDependencies":{"esbuild":"0.25.12"}}

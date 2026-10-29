@@ -1,0 +1,111 @@
+{
+  "source": "Espacio_Portfolio.blend",
+  "blender": "4.3.2",
+  "images": [
+    {
+      "name": "Moqueta_color_512",
+      "width": 512,
+      "height": 512,
+      "packed": true
+    },
+    {
+      "name": "Moqueta_normal_512",
+      "width": 512,
+      "height": 512,
+      "packed": true
+    }
+  ],
+  "areaLights": [
+    {
+      "name": "AREA_RENDER_Z1",
+      "position": [
+        0.0,
+        2.6449999809265137,
+        1.25
+      ],
+      "quaternion": [
+        -0.7071067690849304,
+        -0.0,
+        -0.0,
+        0.7071067690849304
+      ],
+      "width": 5.800000190734863,
+      "height": 2.0999999046325684,
+      "powerWatts": 100.0,
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "AREA_RENDER_Z2",
+      "position": [
+        0.0,
+        2.6449999809265137,
+        3.5999999046325684
+      ],
+      "quaternion": [
+        -0.7071067690849304,
+        -0.0,
+        -0.0,
+        0.7071067690849304
+      ],
+      "width": 5.800000190734863,
+      "height": 2.0999999046325684,
+      "powerWatts": 100.0,
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "AREA_RENDER_Z3",
+      "position": [
+        0.0,
+        2.6449999809265137,
+        5.900000095367432
+      ],
+      "quaternion": [
+        -0.7071067690849304,
+        -0.0,
+        -0.0,
+        0.7071067690849304
+      ],
+      "width": 5.800000190734863,
+      "height": 2.0999999046325684,
+      "powerWatts": 100.0,
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "AREA_Rebote_frontal",
+      "position": [
+        0.0,
+        1.7000000476837158,
+        6.599999904632568
+      ],
+      "quaternion": [
+        -0.030261490494012833,
+        0.0,
+        0.0,
+        0.9995419979095459
+      ],
+      "width": 5.5,
+      "height": 2.0,
+      "powerWatts": 90.0,
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "referenceCamera": "CAM_01_Referencia",
+  "referenceAspect": 1.7777777777777777,
+  "drawers": 156
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#18231e"><meta name="robots" content="noindex">
+<title>EFEDEGAM — Sala experimental</title>
+<link rel="icon" href="../../favicon.svg"><link rel="stylesheet" href="room.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<main id="stage" aria-label="Sala tridimensional de EFEDEGAM"></main>
+<header><a class="wordmark" href="../../index.html">EFEDEGAM</a><span class="edition">ARCHIVO PERSONAL<br>ENSAYO ESPACIAL / 01</span><a class="original" href="../../index.html">Web actual ↗</a></header>
+<div id="loading" role="status"><span class="loading-label">ABRIENDO EL ARCHIVO</span><span id="loadStatus">Preparando la sala…</span><progress aria-label="Carga del modelo"></progress></div>
+<div id="title" aria-hidden="true"><span>OBJETOS · IDEAS · PROYECTOS · OTRAS COSAS</span><strong>EFEDEGAM</strong><span>UN ARCHIVO PERSONAL / EST. 2026</span></div>
+<div class="caption"><span class="dot"></span><span id="viewLabel">01 / VISTA GENERAL</span><span class="experimental">VERSIÓN EXPERIMENTAL</span></div>
+<div class="toolbar" aria-label="Controles de la sala">
+ <nav aria-label="Puntos de vista"><button data-camera="CAM_01_Referencia" aria-pressed="true">General</button><button data-camera="CAM_03_Lateral" aria-pressed="false">Lateral</button><button data-camera="CAM_04_Cajones" aria-pressed="false">Cajones</button></nav>
+ <div class="actions"><button id="play">Reproducir entrada <span aria-hidden="true">↗</span></button><button id="skip" hidden>Saltar entrada ↗</button><button id="compare" aria-pressed="false">Ver referencia Blender</button></div>
+</div>
+<p id="status" role="status" aria-live="polite">Estudio de materiales, luz y perspectiva.</p>
+<div id="reference" hidden><img src="assets/reference-blender.webp" alt="Render original de Blender desde la cámara de referencia"><span>REFERENCIA ORIGINAL · BLENDER / MISMO ENCUADRE EN 16:9</span></div>
+<div id="error" hidden role="alert"><h1>No se ha podido abrir la sala.</h1><p id="errorMessage"></p><a href="../../index.html">Entrar en la web actual ↗</a><button onclick="location.reload()">Volver a intentar</button></div>
+<pre id="diagnostics" hidden></pre>
+<script type="module" src="room.js"></script>
+</body></html>
